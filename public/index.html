@@ -66,6 +66,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 18px;
   margin-bottom: 18px;
   padding: 18px 20px;
@@ -111,6 +112,7 @@ button {
   gap: 10px;
   justify-content: flex-end;
   align-items: center;
+  min-width: 0;
 }
 
 .chip {
@@ -124,21 +126,27 @@ button {
   background: rgba(255, 255, 255, 0.03);
   color: var(--muted);
   font-size: 12px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chip strong {
   color: var(--text);
   font-weight: 600;
+  flex: 0 0 auto;
 }
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(380px, 0.95fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 680px);
   gap: 18px;
   align-items: start;
 }
 
 .panel {
+  min-width: 0;
   border-radius: var(--radius-lg);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 34%),
@@ -148,6 +156,7 @@ button {
 }
 
 .sourcePane {
+  min-width: 0;
   display: grid;
   grid-template-rows: auto auto minmax(360px, 1fr);
 }
@@ -218,6 +227,7 @@ button {
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .sourceActions {
@@ -340,6 +350,7 @@ kbd {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
+  min-width: 0;
 }
 
 .editorToolbar {
@@ -379,6 +390,7 @@ textarea:focus {
 }
 
 .outputPane {
+  min-width: 0;
   display: grid;
   grid-template-rows: auto auto auto;
   position: sticky;
@@ -388,16 +400,19 @@ textarea:focus {
 .outputTopbar {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
 }
 
 .tabRow {
   display: inline-flex;
+  flex-wrap: wrap;
   padding: 4px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
+  max-width: 100%;
 }
 
 .tab {
@@ -418,6 +433,7 @@ textarea:focus {
 
 .outputViewport {
   padding-top: 12px;
+  min-width: 0;
 }
 
 .viewportSurface {
@@ -476,20 +492,28 @@ iframe,
 .filmstripHeader {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   margin-bottom: 14px;
+  min-width: 0;
 }
 
 .filmstripHeader p {
   margin: 0;
   color: var(--muted);
   font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reviewNav {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .filmstrip {
@@ -497,10 +521,12 @@ iframe,
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 2px;
+  max-width: 100%;
 }
 
 .thumb {
-  min-width: 98px;
+  min-width: 92px;
+  flex: 0 0 92px;
   padding: 8px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -561,6 +587,10 @@ iframe,
 
   .topbarActions,
   .sourceMeta {
+    justify-content: flex-start;
+  }
+
+  .reviewNav {
     justify-content: flex-start;
   }
 
