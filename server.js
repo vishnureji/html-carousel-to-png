@@ -14,6 +14,7 @@ const cors = require("cors");
 
 const app = express();
 const previewSessions = new Map();
+const previewJobs = new Map();
 const PREVIEW_TTL_MS = 15 * 60 * 1000;
 
 app.use(express.json({ limit: "25mb" }));
@@ -32,6 +33,29 @@ async function removeDirSafe(dirPath) {
   await fsp.rm(dirPath, { recursive: true, force: true }).catch(() => {});
 }
 
+function buildSlidePayload(index, filePath, image) {
+  return {
+    index: index + 1,
+    name: path.basename(filePath),
+    dataUrl: `data:image/png;base64,${image}`
+  };
+}
+
+function cleanupPreviewSession(sessionId) {
+  const session = previewSessions.get(sessionId);
+
+  if (!session) {
+    return;
+  }
+
+  if (session.cleanupTimer) {
+    clearTimeout(session.cleanupTimer);
+  }
+
+  previewSessions.delete(sessionId);
+  return removeDirSafe(session.requestDir);
+}
+
 function schedulePreviewCleanup(sessionId) {
   const session = previewSessions.get(sessionId);
 
@@ -44,18 +68,27 @@ function schedulePreviewCleanup(sessionId) {
   }
 
   session.cleanupTimer = setTimeout(async () => {
-    const activeSession = previewSessions.get(sessionId);
-
-    if (!activeSession) {
-      return;
-    }
-
-    previewSessions.delete(sessionId);
-    await removeDirSafe(activeSession.requestDir);
+    await cleanupPreviewSession(sessionId);
   }, PREVIEW_TTL_MS);
 }
 
-async function renderSlides(html) {
+function scheduleJobCleanup(jobId) {
+  const job = previewJobs.get(jobId);
+
+  if (!job) {
+    return;
+  }
+
+  if (job.cleanupTimer) {
+    clearTimeout(job.cleanupTimer);
+  }
+
+  job.cleanupTimer = setTimeout(() => {
+    previewJobs.delete(jobId);
+  }, PREVIEW_TTL_MS);
+}
+
+async function renderSlides(html, onProgress) {
   let browser;
   let requestDir;
 
@@ -113,14 +146,24 @@ async function renderSlides(html) {
       throw new Error("No slides found");
     }
 
+    if (onProgress) {
+      await onProgress({
+        stage: "preparing",
+        total: slideCount,
+        completed: 0
+      });
+    }
+
     const files = [];
+    const slides = [];
 
     for (let i = 0; i < slideCount; i += 1) {
       await page.evaluate(index => {
         document.querySelectorAll(".slide").forEach((el, slideIndex) => {
-          el.style.display = slideIndex === index ? "flex" : "none";
-          el.style.visibility = slideIndex === index ? "visible" : "hidden";
-          el.style.opacity = slideIndex === index ? "1" : "0";
+          const active = slideIndex === index;
+          el.style.display = active ? "flex" : "none";
+          el.style.visibility = active ? "visible" : "hidden";
+          el.style.opacity = active ? "1" : "0";
         });
       }, i);
 
@@ -136,11 +179,23 @@ async function renderSlides(html) {
       const filePath = path.join(requestDir, `slide-${i + 1}.png`);
 
       await currentSlide.screenshot({ path: filePath });
+      const image = await fsp.readFile(filePath, { encoding: "base64" });
+      const slide = buildSlidePayload(i, filePath, image);
 
       files.push(filePath);
+      slides.push(slide);
+
+      if (onProgress) {
+        await onProgress({
+          stage: "rendering",
+          total: slideCount,
+          completed: i + 1,
+          slide
+        });
+      }
     }
 
-    return { files, requestDir };
+    return { files, slides, requestDir };
   } catch (error) {
     await removeDirSafe(requestDir);
     throw error;
@@ -175,68 +230,107 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.post("/preview", async (req, res) => {
-  try {
-    console.log("Preview request received");
+app.post("/preview/start", async (req, res) => {
+  const { html } = req.body;
 
-    const { html } = req.body;
-
-    if (!html) {
-      return res.status(400).json({ error: "No HTML provided" });
-    }
-
-    const { files, requestDir } = await renderSlides(html);
-    const sessionId = crypto.randomUUID();
-    const slides = await Promise.all(
-      files.map(async (filePath, index) => {
-        const image = await fsp.readFile(filePath, { encoding: "base64" });
-
-        return {
-          index: index + 1,
-          name: path.basename(filePath),
-          dataUrl: `data:image/png;base64,${image}`
-        };
-      })
-    );
-
-    previewSessions.set(sessionId, {
-      files,
-      requestDir,
-      cleanupTimer: null
-    });
-    schedulePreviewCleanup(sessionId);
-
-    res.json({
-      sessionId,
-      slides
-    });
-  } catch (err) {
-    console.error("Preview error:", err);
-
-    if (err.message === "No slides found") {
-      return res.status(400).json({ error: err.message });
-    }
-
-    res.status(500).json({ error: "Preview failed" });
+  if (!html) {
+    return res.status(400).json({ error: "No HTML provided" });
   }
+
+  const jobId = crypto.randomUUID();
+  const job = {
+    id: jobId,
+    status: "queued",
+    total: 0,
+    completed: 0,
+    slides: [],
+    sessionId: null,
+    error: null,
+    cleanupTimer: null
+  };
+
+  previewJobs.set(jobId, job);
+  scheduleJobCleanup(jobId);
+
+  (async () => {
+    try {
+      job.status = "running";
+
+      const rendered = await renderSlides(html, async update => {
+        if (typeof update.total === "number") {
+          job.total = update.total;
+        }
+
+        if (typeof update.completed === "number") {
+          job.completed = update.completed;
+        }
+
+        if (update.slide) {
+          job.slides.push(update.slide);
+        }
+      });
+
+      const sessionId = crypto.randomUUID();
+
+      previewSessions.set(sessionId, {
+        files: rendered.files,
+        requestDir: rendered.requestDir,
+        cleanupTimer: null
+      });
+      schedulePreviewCleanup(sessionId);
+
+      job.status = "completed";
+      job.sessionId = sessionId;
+      job.total = rendered.slides.length;
+      job.completed = rendered.slides.length;
+    } catch (error) {
+      job.status = "failed";
+      job.error = error.message || "Preview failed";
+    } finally {
+      scheduleJobCleanup(jobId);
+    }
+  })();
+
+  res.json({ jobId });
+});
+
+app.get("/preview/status/:jobId", (req, res) => {
+  const job = previewJobs.get(req.params.jobId);
+
+  if (!job) {
+    return res.status(404).json({ error: "Preview job not found" });
+  }
+
+  res.json({
+    jobId: job.id,
+    status: job.status,
+    total: job.total,
+    completed: job.completed,
+    progress: job.total ? Math.round((job.completed / job.total) * 100) : 0,
+    slides: job.slides,
+    sessionId: job.sessionId,
+    error: job.error
+  });
 });
 
 app.get("/download/:sessionId", async (req, res) => {
-  const session = previewSessions.get(req.params.sessionId);
+  const sessionId = req.params.sessionId;
+  const session = previewSessions.get(sessionId);
 
   if (!session) {
     return res.status(404).send("Preview expired. Render slides again.");
   }
 
   try {
-    schedulePreviewCleanup(req.params.sessionId);
-
     const zipPath = path.join(session.requestDir, "slides.zip");
     await createZip(session.files, zipPath);
 
-    res.download(zipPath, "slides.zip");
+    res.download(zipPath, "slides.zip", async () => {
+      await cleanupPreviewSession(sessionId);
+    });
   } catch (err) {
     console.error("Download error:", err);
+    await cleanupPreviewSession(sessionId);
     res.status(500).send("Download failed");
   }
 });

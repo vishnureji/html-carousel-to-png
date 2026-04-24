@@ -2,148 +2,158 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Slide Exporter Pro</title>
-
 <style>
 :root {
-  --bg: #0b0b0b;
-  --panel: #111315;
-  --panel-alt: #171a1d;
-  --line: #282d31;
-  --text: #f6f7f8;
-  --muted: #8c979f;
-  --accent: #c8f135;
-  --accent-text: #172000;
+  --bg: #07111f;
+  --bg-soft: #0e1b2f;
+  --surface: rgba(9, 18, 33, 0.78);
+  --surface-strong: rgba(11, 23, 40, 0.94);
+  --surface-alt: #122238;
+  --line: rgba(173, 196, 255, 0.12);
+  --line-strong: rgba(173, 196, 255, 0.22);
+  --text: #f5f8ff;
+  --muted: #8ea2c7;
+  --accent: #67e8f9;
+  --accent-strong: #2dd4bf;
+  --accent-text: #042133;
+  --danger: #ff7a90;
+  --shadow: 0 24px 100px rgba(0, 0, 0, 0.35);
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  min-height: 100vh;
-  font-family: Inter, system-ui, sans-serif;
-  background:
-    radial-gradient(circle at top right, rgba(200, 241, 53, 0.12), transparent 28%),
-    linear-gradient(180deg, #0a0b0d 0%, #101215 100%);
+  min-height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", Inter, system-ui, sans-serif;
   color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(103, 232, 249, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(45, 212, 191, 0.16), transparent 24%),
+    linear-gradient(180deg, #06101d 0%, #0a1322 40%, #09111d 100%);
 }
 
-.container {
-  display: grid;
-  grid-template-columns: minmax(320px, 480px) minmax(320px, 1fr);
+.appShell {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 430px minmax(0, 1fr);
 }
 
-.left,
-.right {
-  padding: 24px;
-}
-
-.left {
+.sidebar {
+  padding: 28px;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(7, 17, 31, 0.92), rgba(7, 17, 31, 0.76));
+  backdrop-filter: blur(18px);
 }
 
-.panel {
-  background: rgba(17, 19, 21, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 22px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+.workspace {
+  padding: 28px;
 }
 
-.editor {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  height: 100%;
-  padding: 24px;
+.brand {
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .title {
   margin: 0;
-  font-size: 28px;
-  line-height: 1.1;
+  font-size: clamp(34px, 3vw, 48px);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
 }
 
 .subtitle {
-  margin: 0;
+  margin: 12px 0 0;
+  max-width: 28ch;
   color: var(--muted);
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
-.status {
-  min-height: 22px;
-  color: var(--muted);
-  font-size: 14px;
+.controlPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .dropZone {
-  border: 1px dashed rgba(200, 241, 53, 0.35);
-  border-radius: 16px;
   padding: 18px;
-  background: rgba(200, 241, 53, 0.04);
-  color: var(--muted);
+  border-radius: 18px;
+  border: 1px dashed rgba(103, 232, 249, 0.32);
+  background: linear-gradient(180deg, rgba(103, 232, 249, 0.08), rgba(103, 232, 249, 0.02));
   text-align: center;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  color: var(--muted);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .dropZone strong {
   display: block;
   margin-bottom: 6px;
   color: var(--text);
+  font-size: 16px;
 }
 
 .dropZone.isActive {
+  transform: translateY(-1px);
   border-color: var(--accent);
-  background: rgba(200, 241, 53, 0.1);
-  color: var(--text);
+  background: linear-gradient(180deg, rgba(103, 232, 249, 0.14), rgba(103, 232, 249, 0.05));
 }
 
-.fileButton {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.textareaWrap {
+  position: relative;
 }
 
 textarea {
   width: 100%;
-  min-height: 320px;
-  flex: 1;
+  min-height: 360px;
+  padding: 18px;
   resize: vertical;
-  background: #0d0f11;
-  color: var(--text);
   border: 1px solid var(--line);
-  padding: 16px;
-  border-radius: 16px;
-  font: 14px/1.5 Consolas, Monaco, monospace;
+  border-radius: 18px;
+  background: rgba(3, 9, 18, 0.64);
+  color: var(--text);
+  font: 14px/1.6 "Cascadia Code", Consolas, monospace;
 }
 
 .actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
 button {
-  padding: 12px 16px;
   border: none;
-  border-radius: 12px;
-  background: var(--accent);
-  color: var(--accent-text);
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.18s ease, opacity 0.18s ease;
+  transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
 }
 
 button:hover:not(:disabled) {
   transform: translateY(-1px);
-}
-
-button.secondary {
-  background: #202428;
-  color: var(--text);
 }
 
 button:disabled {
@@ -151,200 +161,402 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.right {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.primaryBtn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: var(--accent-text);
 }
 
-.previewHeader {
+.secondaryBtn {
+  background: rgba(141, 168, 219, 0.08);
+  color: var(--text);
+  border: 1px solid rgba(141, 168, 219, 0.12);
+}
+
+.statusPanel {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(5, 12, 23, 0.55);
+  border: 1px solid var(--line);
+}
+
+.statusTop {
   display: flex;
   justify-content: space-between;
-  align-items: end;
   gap: 16px;
+  align-items: center;
 }
 
-.previewHeader h2 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.previewHeader p {
-  margin: 6px 0 0;
-  color: var(--muted);
-}
-
-.splitPreview {
-  display: grid;
-  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
-  gap: 20px;
-  min-height: 0;
-}
-
-.livePreview,
-.convertedPreview {
-  padding: 18px;
-}
-
-.previewLabel {
-  margin: 0 0 14px;
+.statusLabel {
   color: var(--muted);
   font-size: 13px;
+}
+
+.statusValue {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.progressTrack {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(141, 168, 219, 0.12);
+}
+
+.progressBar {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  transition: width 0.25s ease;
+}
+
+.statusMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.workspaceTitle {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+}
+
+.workspaceNote {
+  margin: 8px 0 0;
+  color: var(--muted);
+  max-width: 48ch;
+  line-height: 1.6;
+}
+
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 22px;
+}
+
+.stage,
+.previewRail {
+  min-height: calc(100vh - 120px);
+  border-radius: 28px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stageHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.stageTitle {
+  margin: 0;
+  font-size: 16px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.stageBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background:
+    radial-gradient(circle at center, rgba(103, 232, 249, 0.08), transparent 52%),
+    linear-gradient(180deg, rgba(8, 15, 28, 0.9), rgba(5, 10, 20, 0.95));
+}
+
+.frameShell,
+.slideShell {
+  width: 100%;
+  max-width: 390px;
+  border-radius: 30px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.35);
+}
+
+iframe,
+.activeSlide {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  display: block;
+  border: none;
+  border-radius: 22px;
+  background: #02060d;
+}
+
+.stageFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 18px 22px 22px;
+  border-top: 1px solid var(--line);
+}
+
+.slideNav {
+  display: flex;
+  gap: 10px;
+}
+
+.ghostBtn {
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.previewRail {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  overflow: hidden;
+}
+
+.railHead {
+  padding: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.railHead h2 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.railSummary {
+  margin: 8px 0 0;
+  color: var(--text);
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.filmstrip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 18px 22px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.thumb {
+  min-width: 96px;
+  padding: 8px;
+  border-radius: 18px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+.thumb:hover {
+  transform: translateY(-1px);
+}
+
+.thumb.isActive {
+  border-color: rgba(103, 232, 249, 0.5);
+  background: rgba(103, 232, 249, 0.08);
+}
+
+.thumb img {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  background: #02060d;
+}
+
+.thumb span {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.railEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: var(--muted);
+}
+
+.pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(103, 232, 249, 0.08);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.frameWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 620px;
-  background: linear-gradient(180deg, #0c0d0f 0%, #13161a 100%);
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-iframe {
-  width: 360px;
-  height: 640px;
-  border-radius: 18px;
-  border: none;
-  background: #000;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-}
-
-.slidesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-  align-content: start;
-}
-
-.slideCard {
-  overflow: hidden;
-  background: var(--panel-alt);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 18px;
-}
-
-.slideCard img {
-  display: block;
-  width: 100%;
-  background: #0c0e10;
-}
-
-.slideMeta {
-  padding: 12px 14px 14px;
-}
-
-.slideMeta strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
-.slideMeta span {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.emptyState {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 620px;
-  padding: 24px;
-  text-align: center;
-  color: var(--muted);
-  background: linear-gradient(180deg, #0c0d0f 0%, #13161a 100%);
-  border-radius: 18px;
-  border: 1px dashed rgba(255, 255, 255, 0.08);
-}
-
-.loader {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.82);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  z-index: 10;
-}
-
-@media (max-width: 1080px) {
-  .container,
-  .splitPreview {
+@media (max-width: 1180px) {
+  .appShell,
+  .workspaceGrid {
     grid-template-columns: 1fr;
   }
 
-  .left {
+  .sidebar {
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .frameWrap,
-  .emptyState {
-    min-height: 480px;
+  .stage,
+  .previewRail {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar,
+  .workspace {
+    padding: 18px;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar,
+  .statusTop,
+  .statusMeta,
+  .stageFoot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .slideNav {
+    width: 100%;
+  }
+
+  .slideNav button {
+    flex: 1;
   }
 }
 </style>
 </head>
-
 <body>
+<div class="appShell">
+  <aside class="sidebar">
+    <div class="brand">
+      <p class="eyebrow">Studio Export</p>
+      <h1 class="title">Render HTML slides into polished PNG decks.</h1>
+      <p class="subtitle">Load source HTML, inspect the live composition, watch rendering progress, then review each exported slide one by one before downloading.</p>
+    </div>
 
-<div class="loader" id="loader">Rendering converted slides...</div>
-
-<div class="container">
-  <div class="left">
-    <div class="panel editor">
-      <div>
-        <h1 class="title">HTML to PNG Slide Exporter</h1>
-        <p class="subtitle">Preview the live HTML, render the final converted PNG slides, then download the exact rendered set.</p>
-      </div>
-
+    <div class="controlPanel">
       <div id="dropZone" class="dropZone">
-        <strong>Drop an HTML file here</strong>
-        or choose a local `.html` file to load it into the editor
-        <div>
-          <button id="filePickerBtn" type="button" class="secondary fileButton">Choose HTML File</button>
+        <strong>Drop an HTML file</strong>
+        Import a local slide deck or paste markup into the editor below.
+        <div style="margin-top:12px;">
+          <button id="filePickerBtn" type="button" class="secondaryBtn">Choose HTML File</button>
           <input id="fileInput" type="file" accept=".html,text/html" hidden>
         </div>
       </div>
 
-      <textarea id="htmlInput" placeholder="Paste HTML that contains .slide elements"></textarea>
+      <div class="textareaWrap">
+        <textarea id="htmlInput" placeholder="Paste HTML that contains .slide elements"></textarea>
+      </div>
 
       <div class="actions">
-        <button id="livePreviewBtn" class="secondary">Preview HTML</button>
-        <button id="renderBtn">Render Slides</button>
-        <button id="downloadBtn" class="secondary" disabled>Download ZIP</button>
+        <button id="livePreviewBtn" class="secondaryBtn" type="button">Live Preview</button>
+        <button id="renderBtn" class="primaryBtn" type="button">Render Slides</button>
+        <button id="downloadBtn" class="secondaryBtn" type="button" disabled>Download ZIP</button>
       </div>
 
-      <div class="status" id="statusText">Paste HTML and render slides to preview the converted PNG output.</div>
-    </div>
-  </div>
-
-  <div class="right">
-    <div class="previewHeader">
-      <div>
-        <h2>Preview Workspace</h2>
-        <p>Left: live HTML. Right: converted PNG slides returned by the server.</p>
-      </div>
-    </div>
-
-    <div class="splitPreview">
-      <div class="panel livePreview">
-        <p class="previewLabel">Live HTML</p>
-        <div class="frameWrap">
-          <iframe id="frame"></iframe>
+      <section class="statusPanel">
+        <div class="statusTop">
+          <div>
+            <div class="statusLabel">Render status</div>
+            <div id="statusValue" class="statusValue">Waiting for source HTML</div>
+          </div>
+          <div id="progressPercent" class="pill">0%</div>
         </div>
-      </div>
-
-      <div class="panel convertedPreview">
-        <p class="previewLabel">Converted Slides</p>
-        <div id="slidesPreview" class="emptyState">No converted slide preview yet.</div>
-      </div>
+        <div class="progressTrack">
+          <div id="progressBar" class="progressBar"></div>
+        </div>
+        <div class="statusMeta">
+          <span id="progressMeta">0 of 0 slides rendered</span>
+          <span id="fileMeta">No preview session yet</span>
+        </div>
+      </section>
     </div>
-  </div>
+  </aside>
+
+  <main class="workspace">
+    <div class="topbar">
+      <div>
+        <h2 class="workspaceTitle">Preview Studio</h2>
+        <p class="workspaceNote">The left stage shows your live HTML source. The right stage focuses on one rendered slide at a time, with a filmstrip for quick review.</p>
+      </div>
+      <div class="pill">One-by-one review</div>
+    </div>
+
+    <div class="workspaceGrid">
+      <section class="stage">
+        <div class="stageHead">
+          <h3 class="stageTitle">Live HTML</h3>
+          <span class="pill">Source</span>
+        </div>
+        <div class="stageBody">
+          <div class="frameShell">
+            <iframe id="frame"></iframe>
+          </div>
+        </div>
+        <div class="stageFoot">
+          <div id="liveSummary" class="statusLabel">Preview the raw HTML before rendering.</div>
+        </div>
+      </section>
+
+      <section class="previewRail">
+        <div class="railHead">
+          <h2>Rendered Slides</h2>
+          <div id="railSummary" class="railSummary">No converted slides yet.</div>
+        </div>
+        <div id="filmstrip" class="filmstrip"></div>
+        <div id="renderStage" class="stageBody railEmpty">Render slides to inspect them one by one.</div>
+        <div class="stageFoot">
+          <div id="activeSlideMeta" class="statusLabel">No active slide</div>
+          <div class="slideNav">
+            <button id="prevSlideBtn" type="button" class="ghostBtn" disabled>Previous</button>
+            <button id="nextSlideBtn" type="button" class="ghostBtn" disabled>Next</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
 </div>
 
 <script>
@@ -352,16 +564,29 @@ iframe {
   const livePreviewBtn = document.getElementById("livePreviewBtn");
   const renderBtn = document.getElementById("renderBtn");
   const downloadBtn = document.getElementById("downloadBtn");
+  const prevSlideBtn = document.getElementById("prevSlideBtn");
+  const nextSlideBtn = document.getElementById("nextSlideBtn");
   const filePickerBtn = document.getElementById("filePickerBtn");
   const fileInput = document.getElementById("fileInput");
   const dropZone = document.getElementById("dropZone");
   const textarea = document.getElementById("htmlInput");
   const frame = document.getElementById("frame");
-  const loader = document.getElementById("loader");
-  const slidesPreview = document.getElementById("slidesPreview");
-  const statusText = document.getElementById("statusText");
+  const filmstrip = document.getElementById("filmstrip");
+  const renderStage = document.getElementById("renderStage");
+  const railSummary = document.getElementById("railSummary");
+  const activeSlideMeta = document.getElementById("activeSlideMeta");
+  const progressBar = document.getElementById("progressBar");
+  const progressPercent = document.getElementById("progressPercent");
+  const progressMeta = document.getElementById("progressMeta");
+  const fileMeta = document.getElementById("fileMeta");
+  const statusValue = document.getElementById("statusValue");
+  const liveSummary = document.getElementById("liveSummary");
 
   let previewSessionId = "";
+  let previewSlides = [];
+  let activeSlideIndex = 0;
+  let currentJobId = "";
+  let pollTimer = null;
 
   function cleanHTML(html) {
     while (html.includes("<!--")) {
@@ -378,12 +603,109 @@ iframe {
     return html;
   }
 
-  function setStatus(message) {
-    statusText.textContent = message;
+  function setProgress(percent, completed, total) {
+    const safePercent = Math.max(0, Math.min(100, percent || 0));
+    progressBar.style.width = `${safePercent}%`;
+    progressPercent.textContent = `${safePercent}%`;
+    progressMeta.textContent = `${completed || 0} of ${total || 0} slides rendered`;
   }
 
   function renderLivePreview() {
     frame.srcdoc = cleanHTML(textarea.value);
+    liveSummary.textContent = "Live source updated from the editor.";
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearTimeout(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  function resetRenderedState(message) {
+    stopPolling();
+    previewSessionId = "";
+    currentJobId = "";
+    previewSlides = [];
+    activeSlideIndex = 0;
+    downloadBtn.disabled = true;
+    prevSlideBtn.disabled = true;
+    nextSlideBtn.disabled = true;
+    filmstrip.innerHTML = "";
+    renderStage.className = "stageBody railEmpty";
+    renderStage.textContent = message;
+    railSummary.textContent = "No converted slides yet.";
+    activeSlideMeta.textContent = "No active slide";
+    setProgress(0, 0, 0);
+    fileMeta.textContent = "No preview session yet";
+  }
+
+  function updateNavButtons() {
+    const hasSlides = previewSlides.length > 0;
+    prevSlideBtn.disabled = !hasSlides || activeSlideIndex === 0;
+    nextSlideBtn.disabled = !hasSlides || activeSlideIndex === previewSlides.length - 1;
+  }
+
+  function renderFilmstrip() {
+    filmstrip.innerHTML = "";
+
+    if (!previewSlides.length) {
+      return;
+    }
+
+    previewSlides.forEach((slide, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `thumb${index === activeSlideIndex ? " isActive" : ""}`;
+      button.innerHTML = `
+        <img src="${slide.dataUrl}" alt="Slide ${slide.index}">
+        <span>${slide.index}</span>
+      `;
+      button.addEventListener("click", function () {
+        activeSlideIndex = index;
+        renderActiveSlide();
+      });
+      filmstrip.appendChild(button);
+    });
+  }
+
+  function renderActiveSlide() {
+    if (!previewSlides.length) {
+      renderStage.className = "stageBody railEmpty";
+      renderStage.textContent = "Render slides to inspect them one by one.";
+      activeSlideMeta.textContent = "No active slide";
+      updateNavButtons();
+      return;
+    }
+
+    const slide = previewSlides[activeSlideIndex];
+    renderStage.className = "stageBody";
+    renderStage.innerHTML = `
+      <div class="slideShell">
+        <img class="activeSlide" src="${slide.dataUrl}" alt="Slide ${slide.index}">
+      </div>
+    `;
+    railSummary.textContent = `${previewSlides.length} rendered slide${previewSlides.length === 1 ? "" : "s"} ready for review.`;
+    activeSlideMeta.textContent = `Showing slide ${slide.index} of ${previewSlides.length} - ${slide.name}`;
+    renderFilmstrip();
+    updateNavButtons();
+  }
+
+  function appendSlides(slides) {
+    if (!slides.length) {
+      return;
+    }
+
+    const existingIndexes = new Set(previewSlides.map(slide => slide.index));
+    const newSlides = slides.filter(slide => !existingIndexes.has(slide.index));
+
+    if (!newSlides.length) {
+      return;
+    }
+
+    previewSlides = previewSlides.concat(newSlides).sort((a, b) => a.index - b.index);
+    activeSlideIndex = previewSlides.length - 1;
+    renderActiveSlide();
   }
 
   async function loadHtmlFile(file) {
@@ -399,41 +721,122 @@ iframe {
       return;
     }
 
-    const text = await file.text();
-    textarea.value = text;
+    textarea.value = await file.text();
     renderLivePreview();
-    resetConvertedPreview("Loaded a new HTML file. Render slides to preview the converted PNG output.");
-    setStatus(`Loaded ${file.name}.`);
+    resetRenderedState("Loaded a new HTML file. Render slides to review them.");
+    statusValue.textContent = `Loaded ${file.name}`;
   }
 
-  function resetConvertedPreview(message) {
-    previewSessionId = "";
-    downloadBtn.disabled = true;
-    slidesPreview.className = "emptyState";
-    slidesPreview.innerHTML = message;
-  }
+  async function pollPreviewStatus(jobId) {
+    const res = await fetch(`/preview/status/${jobId}`);
+    const data = await res.json();
 
-  function showConvertedSlides(slides) {
-    if (!slides.length) {
-      resetConvertedPreview("No converted slides were returned.");
+    if (!res.ok) {
+      throw new Error(data.error || "Preview status failed");
+    }
+
+    appendSlides(data.slides || []);
+    setProgress(data.progress || 0, data.completed || 0, data.total || 0);
+    fileMeta.textContent = data.sessionId ? "Preview session ready" : "Rendering in progress";
+
+    if (data.status === "failed") {
+      stopPolling();
+      renderBtn.disabled = false;
+      statusValue.textContent = data.error || "Preview failed";
+      throw new Error(data.error || "Preview failed");
+    }
+
+    if (data.status === "completed") {
+      stopPolling();
+      previewSessionId = data.sessionId || "";
+      downloadBtn.disabled = !previewSessionId;
+      renderBtn.disabled = false;
+      statusValue.textContent = "Render complete";
+      fileMeta.textContent = previewSessionId ? "ZIP will be removed from the server after download" : "No preview session yet";
       return;
     }
 
-    slidesPreview.className = "slidesGrid";
-    slidesPreview.innerHTML = slides.map(slide => `
-      <article class="slideCard">
-        <img src="${slide.dataUrl}" alt="Slide ${slide.index}">
-        <div class="slideMeta">
-          <strong>Slide ${slide.index}</strong>
-          <span>${slide.name}</span>
-        </div>
-      </article>
-    `).join("");
+    statusValue.textContent = "Rendering slides";
+    pollTimer = setTimeout(function () {
+      pollPreviewStatus(jobId).catch(handleRenderError);
+    }, 450);
+  }
+
+  function handleRenderError(error) {
+    console.error(error);
+    stopPolling();
+    renderBtn.disabled = false;
+    downloadBtn.disabled = true;
+    statusValue.textContent = error.message || "Preview failed";
+    fileMeta.textContent = "No preview session yet";
+    alert(error.message || "Preview failed");
   }
 
   livePreviewBtn.addEventListener("click", function () {
     renderLivePreview();
-    setStatus("Live HTML preview updated.");
+    statusValue.textContent = "Live preview refreshed";
+  });
+
+  renderBtn.addEventListener("click", async function () {
+    const html = cleanHTML(textarea.value);
+
+    if (!html.trim()) {
+      alert("Paste slide HTML first.");
+      return;
+    }
+
+    stopPolling();
+    resetRenderedState("Rendering has started. Slides will appear here one by one.");
+    renderBtn.disabled = true;
+    statusValue.textContent = "Queueing render job";
+    renderLivePreview();
+
+    try {
+      const res = await fetch("/preview/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ html })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Preview start failed");
+      }
+
+      currentJobId = data.jobId;
+      fileMeta.textContent = "Renderer connected";
+      await pollPreviewStatus(currentJobId);
+    } catch (error) {
+      handleRenderError(error);
+    }
+  });
+
+  downloadBtn.addEventListener("click", function () {
+    if (!previewSessionId) {
+      alert("Render slides first.");
+      return;
+    }
+
+    statusValue.textContent = "Downloading ZIP";
+    fileMeta.textContent = "The preview files will be deleted after download";
+    window.location.href = `/download/${previewSessionId}`;
+    downloadBtn.disabled = true;
+  });
+
+  prevSlideBtn.addEventListener("click", function () {
+    if (activeSlideIndex > 0) {
+      activeSlideIndex -= 1;
+      renderActiveSlide();
+    }
+  });
+
+  nextSlideBtn.addEventListener("click", function () {
+    if (activeSlideIndex < previewSlides.length - 1) {
+      activeSlideIndex += 1;
+      renderActiveSlide();
+    }
   });
 
   filePickerBtn.addEventListener("click", function () {
@@ -469,69 +872,15 @@ iframe {
     dropZone.classList.remove("isActive");
 
     try {
-      const file = event.dataTransfer.files[0];
-      await loadHtmlFile(file);
+      await loadHtmlFile(event.dataTransfer.files[0]);
     } catch (error) {
       console.error(error);
       alert("Could not read that file.");
     }
   });
 
-  renderBtn.addEventListener("click", async function () {
-    const html = cleanHTML(textarea.value);
-
-    if (!html.trim()) {
-      alert("Paste slide HTML first.");
-      return;
-    }
-
-    loader.style.display = "flex";
-    renderBtn.disabled = true;
-    downloadBtn.disabled = true;
-    setStatus("Rendering converted PNG slides...");
-    renderLivePreview();
-
-    try {
-      const res = await fetch("/preview", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ html })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Preview failed");
-      }
-
-      previewSessionId = data.sessionId;
-      showConvertedSlides(data.slides || []);
-      downloadBtn.disabled = !previewSessionId;
-      setStatus(`Rendered ${data.slides.length} slide${data.slides.length === 1 ? "" : "s"}. You can review them and download when ready.`);
-    } catch (err) {
-      console.error(err);
-      resetConvertedPreview("Converted slide preview failed.");
-      setStatus(err.message || "Preview failed.");
-      alert(err.message || "Preview failed.");
-    } finally {
-      loader.style.display = "none";
-      renderBtn.disabled = false;
-    }
-  });
-
-  downloadBtn.addEventListener("click", function () {
-    if (!previewSessionId) {
-      alert("Render slides first.");
-      return;
-    }
-
-    setStatus("Downloading the last rendered slide set...");
-    window.location.href = `/download/${previewSessionId}`;
-  });
+  resetRenderedState("Render slides to inspect them one by one.");
 })();
 </script>
-
 </body>
 </html>
