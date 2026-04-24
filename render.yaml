@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: html-to-png-pro
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
