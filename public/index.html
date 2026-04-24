@@ -1,31 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Slide Exporter Pro</title>
+<title>HTML to PNG Pro</title>
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
   --bg: #050505;
-  --bg-secondary: #0f0f0f;
-  --panel: rgba(20, 20, 20, 0.78);
-  --panel-strong: rgba(26, 26, 26, 0.92);
-  --line: rgba(175, 175, 175, 0.12);
-  --line-strong: rgba(255, 53, 0, 0.28);
+  --panel: rgba(20, 20, 20, 0.88);
+  --panel-soft: rgba(255, 255, 255, 0.03);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 53, 0, 0.22);
   --text: #f5f5f5;
-  --text-muted: #afafaf;
-  --text-dim: #7e7e7e;
+  --muted: #afafaf;
+  --muted-dim: #7e7e7e;
   --accent: #ff3500;
   --accent-soft: rgba(255, 53, 0, 0.14);
-  --accent-glow: rgba(255, 53, 0, 0.28);
-  --gray-dark: #454545;
-  --radius-sm: 10px;
+  --radius-lg: 20px;
   --radius-md: 14px;
-  --radius-lg: 18px;
-  --shadow-soft: 0 20px 60px rgba(0, 0, 0, 0.38);
-  --shadow-glow: 0 0 0 1px rgba(255, 53, 0, 0.08), 0 0 24px rgba(255, 53, 0, 0.12);
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.38);
 }
 
 * {
@@ -53,168 +48,18 @@ textarea {
   font: inherit;
 }
 
-.app {
+button {
+  color: inherit;
+}
+
+.appShell {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 268px minmax(0, 1fr);
+  padding: 22px;
 }
 
-.sidebar {
-  position: relative;
-  padding: 24px 18px;
-  background:
-    linear-gradient(180deg, rgba(15, 15, 15, 0.98), rgba(8, 8, 8, 0.94)),
-    linear-gradient(135deg, rgba(255, 53, 0, 0.05), transparent 40%);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.sidebar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 20%);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding: 14px;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: var(--shadow-glow);
-}
-
-.brandMark {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  background: linear-gradient(180deg, rgba(255, 53, 0, 0.16), rgba(255, 53, 0, 0.04));
-  border: 1px solid rgba(255, 53, 0, 0.18);
-}
-
-.brandTitle {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.brandSub {
-  margin: 4px 0 0;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.search {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.search input {
-  width: 100%;
-  padding: 12px 14px 12px 40px;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  outline: none;
-}
-
-.search input:focus {
-  border-color: rgba(255, 53, 0, 0.35);
-  box-shadow: 0 0 0 4px rgba(255, 53, 0, 0.08);
-}
-
-.searchIcon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  width: 16px;
-  height: 16px;
-  transform: translateY(-50%);
-  color: var(--text-dim);
-}
-
-.navGroup {
-  margin-bottom: 20px;
-}
-
-.navLabel {
-  margin: 0 0 10px;
-  padding: 0 10px;
-  color: var(--text-dim);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.navItem {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 12px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
-}
-
-.navItem:hover,
-.navItem.isActive {
-  transform: translateX(2px);
-  color: var(--text);
-  background: linear-gradient(90deg, rgba(255, 53, 0, 0.12), rgba(255, 53, 0, 0.03));
-  border-color: rgba(255, 53, 0, 0.2);
-  box-shadow: inset 0 0 18px rgba(255, 53, 0, 0.08);
-}
-
-.navIcon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-}
-
-.sidebarCard {
-  margin-top: 26px;
-  padding: 16px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255, 53, 0, 0.1), rgba(255, 53, 0, 0.03));
-  border: 1px solid rgba(255, 53, 0, 0.16);
-  box-shadow: inset 0 0 28px rgba(255, 53, 0, 0.08);
-}
-
-.sidebarCard h3 {
-  margin: 0 0 8px;
-  font-size: 14px;
-  line-height: 1.2;
-}
-
-.sidebarCard p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.main {
-  padding: 24px;
-}
-
-.dashboard {
-  display: grid;
-  gap: 18px;
+.appFrame {
+  max-width: 1500px;
+  margin: 0 auto;
 }
 
 .topbar {
@@ -222,75 +67,73 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 20px 22px;
+  margin-bottom: 18px;
+  padding: 18px 20px;
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
-    rgba(15, 15, 15, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: var(--shadow-soft);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 34%),
+    var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
-.welcomeLabel {
+.brand {
+  display: grid;
+  gap: 6px;
+}
+
+.eyebrow {
   margin: 0;
-  color: var(--text-dim);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  color: var(--muted-dim);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.welcomeTitle {
-  margin: 8px 0 0;
-  font-size: clamp(28px, 3vw, 42px);
-  line-height: 1.08;
+.brand h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1;
   letter-spacing: -0.04em;
 }
 
-.welcomeText {
-  margin: 10px 0 0;
-  max-width: 58ch;
-  color: var(--text-muted);
-  font-size: 14px;
+.brand p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 64ch;
   line-height: 1.45;
 }
 
-.topbarMeta {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
-  gap: 12px;
-  min-width: 280px;
+.topbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
 }
 
-.metricChip {
-  padding: 14px;
-  border-radius: 14px;
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.metricChip span {
-  display: block;
-  color: var(--text-dim);
+  color: var(--muted);
   font-size: 12px;
-  line-height: 1.35;
 }
 
-.metricChip strong {
-  display: block;
-  margin-top: 7px;
-  font-size: 18px;
-  line-height: 1.1;
+.chip strong {
+  color: var(--text);
+  font-weight: 600;
 }
 
-.contentGrid {
+.workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr);
-  gap: 18px;
-}
-
-.stack {
-  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(380px, 0.95fr);
   gap: 18px;
 }
 
@@ -298,167 +141,117 @@ textarea {
   border-radius: var(--radius-lg);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 34%),
-    rgba(15, 15, 15, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: var(--shadow-soft);
-  overflow: hidden;
+    var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
-.panelHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 18px 0;
+.sourcePane {
+  display: grid;
+  grid-template-rows: auto auto minmax(360px, 1fr);
+  min-height: calc(100vh - 120px);
 }
 
-.panelTitle {
+.sourceHeader,
+.outputHeader {
+  padding: 18px 20px 0;
+}
+
+.sourceBlock,
+.statusBlock,
+.editorBlock,
+.outputViewport,
+.filmstripBlock {
+  padding: 18px 20px;
+}
+
+.sectionTitle {
   margin: 0;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
-  line-height: 1.2;
 }
 
-.panelSub {
-  margin: 6px 0 0;
-  color: var(--text-muted);
-  font-size: 13px;
+.sectionSub {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 14px;
   line-height: 1.45;
 }
 
-.folderScroller {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(220px, 1fr);
-  gap: 14px;
+.sourceCard {
   padding: 18px;
-  overflow-x: auto;
-}
-
-.folderCard {
-  padding: 16px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  background: linear-gradient(180deg, var(--accent-soft), rgba(255, 53, 0, 0.02));
   transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.folderCard:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 53, 0, 0.22);
-  box-shadow: inset 0 0 20px rgba(255, 53, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.22);
+.sourceCard.isActive,
+.sourceCard:hover {
+  border-color: rgba(255, 53, 0, 0.42);
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 24px rgba(255, 53, 0, 0.08);
 }
 
-.folderBadge {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  color: var(--accent);
-  background: rgba(255, 53, 0, 0.08);
-  border: 1px solid rgba(255, 53, 0, 0.15);
-}
-
-.folderCard h4 {
-  margin: 16px 0 6px;
-  font-size: 15px;
-  line-height: 1.15;
-}
-
-.folderCard p {
-  margin: 0 0 14px;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.folderMeta {
+.sourceTop {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  color: var(--text-dim);
-  font-size: 12px;
-}
-
-.workspacePanel {
-  padding: 18px;
-}
-
-.editorLayout {
-  display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
   gap: 16px;
+  align-items: flex-start;
 }
 
-.sourceTools {
-  display: grid;
-  gap: 14px;
-}
-
-.dropZone {
-  padding: 18px;
-  border-radius: 16px;
-  border: 1px dashed rgba(255, 53, 0, 0.22);
-  background: linear-gradient(180deg, rgba(255, 53, 0, 0.08), rgba(255, 53, 0, 0.02));
-  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
-}
-
-.dropZone.isActive,
-.dropZone:hover {
-  border-color: rgba(255, 53, 0, 0.45);
-  box-shadow: inset 0 0 22px rgba(255, 53, 0, 0.08);
-}
-
-.dropZone strong {
+.sourceTop strong {
   display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-  line-height: 1.2;
+  font-size: 15px;
 }
 
-.dropZone p {
-  margin: 0;
-  color: var(--text-muted);
+.sourceTop p {
+  margin: 8px 0 0;
+  color: var(--muted);
   font-size: 13px;
   line-height: 1.45;
+  max-width: 52ch;
 }
 
-.buttonRow {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.sourceMeta {
+  display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sourceActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .btn {
-  padding: 12px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
   border-radius: 12px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
+  background: var(--panel-soft);
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
 }
 
 .btn:hover:not(:disabled) {
   transform: translateY(-1px);
+  border-color: var(--border-strong);
+  box-shadow: inset 0 0 14px rgba(255, 53, 0, 0.06);
 }
 
 .btnPrimary {
-  color: #fff;
+  border-color: transparent;
   background: linear-gradient(135deg, #ff3500, #ff6a00);
   box-shadow: 0 10px 30px rgba(255, 53, 0, 0.22);
-}
-
-.btnSecondary,
-.btnGhost {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.btnSecondary:hover:not(:disabled),
-.btnGhost:hover:not(:disabled) {
-  border-color: rgba(255, 53, 0, 0.22);
-  box-shadow: inset 0 0 14px rgba(255, 53, 0, 0.06);
+  color: #fff;
+  font-weight: 700;
 }
 
 .btn:disabled {
@@ -466,53 +259,70 @@ textarea {
   cursor: not-allowed;
 }
 
-.statusCard {
-  padding: 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.statusTop {
+.hintRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   gap: 12px;
-  margin-bottom: 14px;
-}
-
-.statusTop span {
-  color: var(--text-dim);
+  margin-top: 14px;
+  color: var(--muted);
   font-size: 12px;
-  line-height: 1.35;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
 }
 
-.statusTop strong {
-  display: block;
-  margin-top: 6px;
-  font-size: 16px;
-  line-height: 1.1;
+.kbdHints {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.progressBadge {
-  min-width: 58px;
-  text-align: center;
-  padding: 9px 10px;
-  border-radius: 999px;
-  color: var(--accent);
-  background: rgba(255, 53, 0, 0.08);
-  border: 1px solid rgba(255, 53, 0, 0.16);
-  box-shadow: 0 0 20px rgba(255, 53, 0, 0.08);
-  font-size: 12px;
+kbd {
+  padding: 3px 7px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: 11px;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(120px, 0.8fr));
+  gap: 12px;
+}
+
+.statusCard {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.statusCardLabel {
+  color: var(--muted-dim);
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.statusCardValue {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.statusCardSub {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .progressTrack {
   height: 10px;
+  margin-top: 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
   overflow: hidden;
 }
 
@@ -522,39 +332,45 @@ textarea {
   border-radius: inherit;
   background: linear-gradient(90deg, #ff3500, #ff7a00);
   box-shadow: 0 0 24px rgba(255, 53, 0, 0.45);
-  transition: width 0.26s ease;
+  transition: width 0.25s ease;
 }
 
-.statusMeta {
+.editorBlock {
+  padding-top: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.editorToolbar {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 12px;
-  color: var(--text-muted);
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.editorToolbar strong {
+  font-size: 13px;
+}
+
+.editorToolbar span {
+  color: var(--muted);
   font-size: 12px;
-  line-height: 1.4;
-}
-
-.editorSurface {
-  display: grid;
-  gap: 12px;
-}
-
-.textareaWrap {
-  height: 100%;
 }
 
 textarea {
   width: 100%;
+  height: 100%;
   min-height: 420px;
   padding: 18px;
-  resize: vertical;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  resize: none;
   background: rgba(6, 6, 6, 0.82);
   color: var(--text);
-  outline: none;
   line-height: 1.55;
+  outline: none;
 }
 
 textarea:focus {
@@ -562,147 +378,114 @@ textarea:focus {
   box-shadow: inset 0 0 0 1px rgba(255, 53, 0, 0.12);
 }
 
-.notesGrid {
+.outputPane {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  padding: 18px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: calc(100vh - 120px);
+  position: sticky;
+  top: 22px;
 }
 
-.noteCard {
-  padding: 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  min-height: 146px;
-  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.noteCard:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 53, 0, 0.24);
-  box-shadow: inset 0 0 20px rgba(255, 53, 0, 0.05);
-}
-
-.noteTag {
-  display: inline-flex;
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: rgba(255, 53, 0, 0.08);
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.noteCard h4 {
-  margin: 14px 0 8px;
-  font-size: 15px;
-  line-height: 1.15;
-}
-
-.noteCard p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.previewPanel {
-  display: grid;
-  gap: 18px;
-}
-
-.analyticsCard,
-.reviewCard,
-.liveCard {
-  padding: 18px;
-}
-
-.analyticsWrap {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-top: 14px;
-}
-
-.donut {
-  --value: 0;
-  width: 128px;
-  height: 128px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background:
-    radial-gradient(circle at center, rgba(15, 15, 15, 0.98) 0 42px, transparent 43px),
-    conic-gradient(#ff3500 calc(var(--value) * 1%), rgba(255, 255, 255, 0.08) 0);
-  box-shadow: 0 0 40px rgba(255, 53, 0, 0.14);
-}
-
-.donutCenter {
-  text-align: center;
-}
-
-.donutCenter strong {
-  display: block;
-  font-size: 24px;
-  line-height: 1.05;
-}
-
-.donutCenter span {
-  color: var(--text-dim);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.analyticsList {
-  flex: 1;
-  display: grid;
-  gap: 12px;
-}
-
-.analyticsItem {
+.outputTopbar {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-  font-size: 13px;
+  align-items: center;
 }
 
-.analyticsItem strong {
+.tabRow {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.tab {
+  min-height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tab.isActive {
+  background: rgba(255, 53, 0, 0.14);
   color: var(--text);
-  font-size: 15px;
+  box-shadow: inset 0 0 0 1px rgba(255, 53, 0, 0.16);
 }
 
-.liveFrame,
-.slideFrame {
-  margin-top: 14px;
+.outputViewport {
+  padding-top: 12px;
+  min-height: 0;
+}
+
+.viewportSurface {
+  height: 100%;
+  min-height: 520px;
   padding: 12px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
   box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.015);
 }
 
-iframe,
-.activeSlide {
+.viewportStage {
   width: 100%;
-  display: block;
-  aspect-ratio: 9 / 16;
-  border: none;
+  height: 100%;
   border-radius: 12px;
+  background: #020202;
+  overflow: hidden;
+}
+
+iframe,
+.renderImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
   background: #020202;
 }
 
-.reviewHead {
+.renderImage {
+  object-fit: contain;
+}
+
+.emptyStage {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.emptyStage strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.filmstripBlock {
+  padding-top: 0;
+}
+
+.filmstripHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.filmstripHeader p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .reviewNav {
@@ -713,17 +496,14 @@ iframe,
 .filmstrip {
   display: flex;
   gap: 10px;
-  margin-top: 16px;
-  padding-top: 14px;
   overflow-x: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .thumb {
-  min-width: 92px;
+  min-width: 98px;
   padding: 8px;
-  border-radius: 14px;
-  border: 1px solid transparent;
+  border-radius: 12px;
+  border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
@@ -741,334 +521,177 @@ iframe,
   display: block;
   aspect-ratio: 9 / 16;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #020202;
 }
 
 .thumb span {
   display: block;
   margin-top: 8px;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: 11px;
   text-align: center;
 }
 
-.emptyState {
-  display: grid;
-  place-items: center;
-  min-height: 320px;
-  color: var(--text-muted);
-  text-align: center;
-  line-height: 1.45;
-}
-
-.muted {
-  color: var(--text-muted);
-}
-
-.small {
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-svg {
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-@media (max-width: 1240px) {
-  .contentGrid,
-  .editorLayout {
+@media (max-width: 1180px) {
+  .workspace {
     grid-template-columns: 1fr;
   }
 
-  .notesGrid {
-    grid-template-columns: 1fr 1fr;
+  .sourcePane,
+  .outputPane {
+    min-height: auto;
+    position: static;
   }
 }
 
-@media (max-width: 980px) {
-  .app {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  }
-}
-
-@media (max-width: 720px) {
-  .main,
-  .sidebar {
-    padding: 16px;
+@media (max-width: 780px) {
+  .appShell {
+    padding: 14px;
   }
 
   .topbar,
-  .analyticsWrap,
-  .statusTop,
-  .statusMeta,
-  .reviewHead {
+  .sourceTop,
+  .hintRow,
+  .statusGrid,
+  .outputTopbar,
+  .filmstripHeader,
+  .editorToolbar {
     display: grid;
   }
 
-  .topbarMeta,
-  .buttonRow,
-  .notesGrid {
-    grid-template-columns: 1fr;
+  .topbarActions,
+  .sourceMeta {
+    justify-content: flex-start;
+  }
+
+  .viewportSurface {
+    min-height: 400px;
   }
 }
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brandMark">
-        <svg viewBox="0 0 24 24" class="navIcon"><path d="M5 19h14M7 16V8m5 8V5m5 11v-6"/></svg>
+<div class="appShell">
+  <div class="appFrame">
+    <header class="topbar">
+      <div class="brand">
+        <p class="eyebrow">HTML to PNG Pro</p>
+        <h1>Render slides without hunting through the UI</h1>
+        <p>Load source on the left, inspect output on the right, and keep the main actions visible the whole time.</p>
       </div>
-      <div>
-        <p class="brandTitle">Slide Export Pro</p>
-        <p class="brandSub">Render, review, and package decks with a cleaner production flow.</p>
+      <div class="topbarActions">
+        <div id="headerFileChip" class="chip"><strong>File</strong> Untitled</div>
+        <div id="headerSlideChip" class="chip"><strong>Slides</strong> 0 detected</div>
+        <div id="headerModeChip" class="chip"><strong>View</strong> Live preview</div>
       </div>
-    </div>
+    </header>
 
-    <div class="search">
-      <svg viewBox="0 0 24 24" class="searchIcon"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-      <input type="text" value="Rendered slides" aria-label="Search">
-    </div>
-
-    <div class="navGroup">
-      <p class="navLabel">Workspace</p>
-      <button class="navItem isActive" type="button">
-        <svg viewBox="0 0 24 24" class="navIcon"><path d="M3 12 12 4l9 8"></path><path d="M5 10v10h14V10"></path></svg>
-        <span>Dashboard</span>
-      </button>
-      <button class="navItem" type="button">
-        <svg viewBox="0 0 24 24" class="navIcon"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
-        <span>Projects</span>
-      </button>
-      <button class="navItem" type="button">
-        <svg viewBox="0 0 24 24" class="navIcon"><path d="M4 7h16"></path><path d="M7 4v6"></path><path d="M17 4v6"></path><rect x="4" y="7" width="16" height="13" rx="2"></rect></svg>
-        <span>Calendar</span>
-      </button>
-      <button class="navItem" type="button">
-        <svg viewBox="0 0 24 24" class="navIcon"><path d="M12 20v-8"></path><path d="M8 16h8"></path><path d="M5 4h14l-1 8H6L5 4Z"></path></svg>
-        <span>Archives</span>
-      </button>
-    </div>
-
-    <div class="navGroup">
-      <p class="navLabel">Tools</p>
-      <button class="navItem" type="button">
-        <svg viewBox="0 0 24 24" class="navIcon"><path d="M4 12h16"></path><path d="M12 4v16"></path></svg>
-        <span>New Render</span>
-      </button>
-      <button class="navItem" type="button">
-        <svg viewBox="0 0 24 24" class="navIcon"><path d="M5 19h14"></path><path d="M12 5v10"></path><path d="m8 11 4 4 4-4"></path></svg>
-        <span>Downloads</span>
-      </button>
-    </div>
-
-    <div class="sidebarCard">
-      <h3>System Focus</h3>
-      <p>The preview ZIP is cleared after download, keeping the server clean while you iterate on decks.</p>
-    </div>
-  </aside>
-
-  <main class="main">
-    <section class="dashboard">
-      <header class="topbar">
-        <div>
-          <p class="welcomeLabel">Welcome, User</p>
-          <h1 class="welcomeTitle">Minimal control room for HTML-to-PNG production.</h1>
-          <p class="welcomeText">Import source decks, preview raw HTML, watch render progress, then inspect the final slides in a focused review pane built for quick export decisions.</p>
+    <main class="workspace">
+      <section class="panel sourcePane">
+        <div class="sourceHeader">
+          <h2 class="sectionTitle">Source</h2>
+          <p class="sectionSub">Bring in HTML, adjust it in place, then render when the live preview looks right.</p>
         </div>
-        <div class="topbarMeta">
-          <div class="metricChip">
-            <span>Preview Mode</span>
-            <strong>One by one</strong>
-          </div>
-          <div class="metricChip">
-            <span>Server Cleanup</span>
-            <strong>Auto delete</strong>
+
+        <div class="sourceBlock">
+          <div id="dropZone" class="sourceCard">
+            <div class="sourceTop">
+              <div>
+                <strong>Drop an HTML file here</strong>
+                <p>The renderer exports each element with the <code>.slide</code> class as a separate PNG.</p>
+              </div>
+              <div class="sourceMeta">
+                <div id="sourceFileChip" class="chip"><strong>File</strong> Untitled</div>
+                <div id="sourceRenderChip" class="chip"><strong>Status</strong> Waiting</div>
+              </div>
+            </div>
+
+            <div class="sourceActions">
+              <button id="filePickerBtn" type="button" class="btn">Choose HTML File</button>
+              <input id="fileInput" type="file" accept=".html,text/html" hidden>
+              <button id="livePreviewBtn" type="button" class="btn">Refresh Preview</button>
+              <button id="renderBtn" type="button" class="btn btnPrimary">Render Slides</button>
+              <button id="downloadBtn" type="button" class="btn" disabled>Download ZIP</button>
+            </div>
+
+            <div class="hintRow">
+              <span>Preview updates while you type. Render only when you want a new PNG set.</span>
+              <div class="kbdHints">
+                <kbd>Ctrl</kbd><kbd>Enter</kbd><span>render</span>
+                <kbd>Left</kbd><kbd>Right</kbd><span>review</span>
+              </div>
+            </div>
           </div>
         </div>
-      </header>
 
-      <div class="contentGrid">
-        <div class="stack">
-          <section class="panel">
-            <div class="panelHead">
-              <div>
-                <h2 class="panelTitle">Folders</h2>
-                <p class="panelSub">Quick views for the deck sources and render workflow you use most.</p>
+        <div class="statusBlock">
+          <div class="statusGrid">
+            <div class="statusCard">
+              <div class="statusCardLabel">Render Status</div>
+              <div id="statusValue" class="statusCardValue">Waiting for source HTML</div>
+              <div class="progressTrack">
+                <div id="progressBar" class="progressBar"></div>
               </div>
+              <div id="fileMeta" class="statusCardSub">No preview session yet</div>
             </div>
-            <div class="folderScroller">
-              <article class="folderCard">
-                <div class="folderBadge">
-                  <svg viewBox="0 0 24 24" class="navIcon"><path d="M3 7h6l2 2h10v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"></path></svg>
-                </div>
-                <h4>Imported Decks</h4>
-                <p>HTML slide sources dropped into the workspace for live preview and rendering.</p>
-                <div class="folderMeta"><span>Active</span><span>Local</span></div>
-              </article>
-              <article class="folderCard">
-                <div class="folderBadge">
-                  <svg viewBox="0 0 24 24" class="navIcon"><path d="M12 3v18"></path><path d="M3 12h18"></path></svg>
-                </div>
-                <h4>Render Queue</h4>
-                <p>Track progress, observe slide generation, and download only when the sequence looks right.</p>
-                <div class="folderMeta"><span>Live</span><span>Jobs</span></div>
-              </article>
-              <article class="folderCard">
-                <div class="folderBadge">
-                  <svg viewBox="0 0 24 24" class="navIcon"><path d="M4 6h16"></path><path d="M4 12h10"></path><path d="M4 18h16"></path></svg>
-                </div>
-                <h4>Review Sessions</h4>
-                <p>Rendered slides appear progressively so you can inspect each frame before download.</p>
-                <div class="folderMeta"><span>Visual</span><span>Preview</span></div>
-              </article>
-            </div>
-          </section>
 
-          <section class="panel">
-            <div class="panelHead">
-              <div>
-                <h2 class="panelTitle">Editor Workspace</h2>
-                <p class="panelSub">Drop a file, edit the source, and trigger rendering from the same command center.</p>
-              </div>
+            <div class="statusCard">
+              <div class="statusCardLabel">Progress</div>
+              <div id="progressPercent" class="statusCardValue">0%</div>
+              <div id="progressMeta" class="statusCardSub">0 of 0 slides rendered</div>
             </div>
-            <div class="workspacePanel">
-              <div class="editorLayout">
-                <div class="sourceTools">
-                  <div id="dropZone" class="dropZone">
-                    <strong>Drop an HTML file</strong>
-                    <p>Load a local deck or paste `.slide` markup into the editor. The system will preview the source and render it into PNG slides.</p>
-                    <div style="margin-top:14px;">
-                      <button id="filePickerBtn" type="button" class="btn btnSecondary">Choose HTML File</button>
-                      <input id="fileInput" type="file" accept=".html,text/html" hidden>
-                    </div>
-                  </div>
 
-                  <div class="buttonRow">
-                    <button id="livePreviewBtn" class="btn btnSecondary" type="button">Live Preview</button>
-                    <button id="renderBtn" class="btn btnPrimary" type="button">Render Slides</button>
-                    <button id="downloadBtn" class="btn btnGhost" type="button" disabled>Download ZIP</button>
-                  </div>
-
-                  <div class="statusCard">
-                    <div class="statusTop">
-                      <div>
-                        <span>Render status</span>
-                        <strong id="statusValue">Waiting for source HTML</strong>
-                      </div>
-                      <div id="progressPercent" class="progressBadge">0%</div>
-                    </div>
-                    <div class="progressTrack">
-                      <div id="progressBar" class="progressBar"></div>
-                    </div>
-                    <div class="statusMeta">
-                      <span id="progressMeta">0 of 0 slides rendered</span>
-                      <span id="fileMeta">No preview session yet</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="editorSurface">
-                  <div class="textareaWrap">
-                    <textarea id="htmlInput" placeholder="Paste HTML that contains .slide elements"></textarea>
-                  </div>
-                </div>
-              </div>
+            <div class="statusCard">
+              <div class="statusCardLabel">Editor</div>
+              <div id="editorMeta" class="statusCardValue">No slides detected</div>
+              <div id="editorSubMeta" class="statusCardSub">Add one or more <code>.slide</code> elements.</div>
             </div>
-          </section>
-
-          <section class="panel">
-            <div class="panelHead">
-              <div>
-                <h2 class="panelTitle">Notes</h2>
-                <p class="panelSub">Operational reminders for fast, reliable exports.</p>
-              </div>
-            </div>
-            <div class="notesGrid">
-              <article class="noteCard">
-                <span class="noteTag">Input</span>
-                <h4>Source deck hygiene</h4>
-                <p>Keep every exported frame inside a `.slide` container so the renderer can isolate each screen cleanly.</p>
-              </article>
-              <article class="noteCard">
-                <span class="noteTag">Preview</span>
-                <h4>Review in sequence</h4>
-                <p>Slides appear progressively in the review panel, so you can catch layout or font issues before packaging.</p>
-              </article>
-              <article class="noteCard">
-                <span class="noteTag">Server</span>
-                <h4>Auto-clean export files</h4>
-                <p>Once the ZIP download begins, preview files are deleted from the server to keep runtime storage lean.</p>
-              </article>
-            </div>
-          </section>
+          </div>
         </div>
 
-        <div class="previewPanel">
-          <section class="panel analyticsCard">
-            <div class="panelHead" style="padding:0;">
-              <div>
-                <h2 class="panelTitle">Analytics</h2>
-                <p class="panelSub">Live render completion with an accent-glow progress ring.</p>
-              </div>
-            </div>
-            <div class="analyticsWrap">
-              <div id="donut" class="donut" style="--value: 0;">
-                <div class="donutCenter">
-                  <strong id="donutValue">0%</strong>
-                  <span>ready</span>
-                </div>
-              </div>
-              <div class="analyticsList">
-                <div class="analyticsItem"><span>Rendered slides</span><strong id="analyticsRendered">0</strong></div>
-                <div class="analyticsItem"><span>Total slides</span><strong id="analyticsTotal">0</strong></div>
-                <div class="analyticsItem"><span>Preview state</span><strong id="analyticsState">Idle</strong></div>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel liveCard">
-            <div class="panelHead" style="padding:0;">
-              <div>
-                <h2 class="panelTitle">Live Source</h2>
-                <p class="panelSub" id="liveSummary">Preview the raw HTML before rendering.</p>
-              </div>
-            </div>
-            <div class="liveFrame">
-              <iframe id="frame"></iframe>
-            </div>
-          </section>
-
-          <section class="panel reviewCard">
-            <div class="reviewHead">
-              <div>
-                <h2 class="panelTitle">Rendered Slides</h2>
-                <p id="railSummary" class="panelSub">No converted slides yet.</p>
-              </div>
-              <div class="reviewNav">
-                <button id="prevSlideBtn" type="button" class="btn btnGhost" disabled>Previous</button>
-                <button id="nextSlideBtn" type="button" class="btn btnGhost" disabled>Next</button>
-              </div>
-            </div>
-            <div id="renderStage" class="emptyState">Render slides to inspect them one by one.</div>
-            <p id="activeSlideMeta" class="muted small" style="margin:16px 0 0;">No active slide</p>
-            <div id="filmstrip" class="filmstrip"></div>
-          </section>
+        <div class="editorBlock">
+          <div class="editorToolbar">
+            <strong>Source HTML</strong>
+            <span>Edit here while watching the output panel update.</span>
+          </div>
+          <textarea id="htmlInput" placeholder="Paste HTML that contains .slide elements"></textarea>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
+
+      <section class="panel outputPane">
+        <div class="outputHeader">
+          <div class="outputTopbar">
+            <div>
+              <h2 class="sectionTitle">Output</h2>
+              <p id="outputSummary" class="sectionSub">Preview your current source or switch to rendered slides.</p>
+            </div>
+            <div class="tabRow">
+              <button id="liveTabBtn" type="button" class="tab isActive">Live</button>
+              <button id="renderedTabBtn" type="button" class="tab">Rendered</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="outputViewport">
+          <div class="viewportSurface">
+            <div id="viewportStage" class="viewportStage"></div>
+          </div>
+        </div>
+
+        <div class="filmstripBlock">
+          <div class="filmstripHeader">
+            <p id="activeSlideMeta">No active rendered slide</p>
+            <div class="reviewNav">
+              <button id="prevSlideBtn" type="button" class="btn" disabled>Previous</button>
+              <button id="nextSlideBtn" type="button" class="btn" disabled>Next</button>
+            </div>
+          </div>
+          <div id="filmstrip" class="filmstrip"></div>
+        </div>
+      </section>
+    </main>
+  </div>
 </div>
 
 <script>
@@ -1082,28 +705,33 @@ svg {
   const fileInput = document.getElementById("fileInput");
   const dropZone = document.getElementById("dropZone");
   const textarea = document.getElementById("htmlInput");
-  const frame = document.getElementById("frame");
+  const viewportStage = document.getElementById("viewportStage");
   const filmstrip = document.getElementById("filmstrip");
-  const renderStage = document.getElementById("renderStage");
-  const railSummary = document.getElementById("railSummary");
-  const activeSlideMeta = document.getElementById("activeSlideMeta");
   const progressBar = document.getElementById("progressBar");
   const progressPercent = document.getElementById("progressPercent");
   const progressMeta = document.getElementById("progressMeta");
   const fileMeta = document.getElementById("fileMeta");
   const statusValue = document.getElementById("statusValue");
-  const liveSummary = document.getElementById("liveSummary");
-  const donut = document.getElementById("donut");
-  const donutValue = document.getElementById("donutValue");
-  const analyticsRendered = document.getElementById("analyticsRendered");
-  const analyticsTotal = document.getElementById("analyticsTotal");
-  const analyticsState = document.getElementById("analyticsState");
+  const editorMeta = document.getElementById("editorMeta");
+  const editorSubMeta = document.getElementById("editorSubMeta");
+  const headerFileChip = document.getElementById("headerFileChip");
+  const headerSlideChip = document.getElementById("headerSlideChip");
+  const headerModeChip = document.getElementById("headerModeChip");
+  const sourceFileChip = document.getElementById("sourceFileChip");
+  const sourceRenderChip = document.getElementById("sourceRenderChip");
+  const activeSlideMeta = document.getElementById("activeSlideMeta");
+  const outputSummary = document.getElementById("outputSummary");
+  const liveTabBtn = document.getElementById("liveTabBtn");
+  const renderedTabBtn = document.getElementById("renderedTabBtn");
 
   let previewSessionId = "";
   let previewSlides = [];
   let activeSlideIndex = 0;
   let currentJobId = "";
   let pollTimer = null;
+  let previewTimer = null;
+  let currentFileName = "Untitled";
+  let activeView = "live";
 
   function cleanHTML(html) {
     while (html.includes("<!--")) {
@@ -1120,20 +748,77 @@ svg {
     return html;
   }
 
+  function countSlides(html) {
+    const matches = cleanHTML(html).match(/class\s*=\s*["'][^"']*\bslide\b[^"']*["']/gi);
+    return matches ? matches.length : 0;
+  }
+
+  function setActiveView(view) {
+    activeView = view;
+    liveTabBtn.classList.toggle("isActive", view === "live");
+    renderedTabBtn.classList.toggle("isActive", view === "rendered");
+    headerModeChip.innerHTML = `<strong>View</strong> ${view === "live" ? "Live preview" : "Rendered slides"}`;
+    paintViewport();
+  }
+
   function setProgress(percent, completed, total) {
     const safePercent = Math.max(0, Math.min(100, percent || 0));
     progressBar.style.width = `${safePercent}%`;
     progressPercent.textContent = `${safePercent}%`;
     progressMeta.textContent = `${completed || 0} of ${total || 0} slides rendered`;
-    donut.style.setProperty("--value", safePercent);
-    donutValue.textContent = `${safePercent}%`;
-    analyticsRendered.textContent = String(completed || 0);
-    analyticsTotal.textContent = String(total || 0);
   }
 
-  function renderLivePreview() {
-    frame.srcdoc = cleanHTML(textarea.value);
-    liveSummary.textContent = "Live source updated from the editor.";
+  function updateSourceMeta() {
+    const slideCount = countSlides(textarea.value);
+    headerFileChip.innerHTML = `<strong>File</strong> ${currentFileName}`;
+    sourceFileChip.innerHTML = `<strong>File</strong> ${currentFileName}`;
+    headerSlideChip.innerHTML = `<strong>Slides</strong> ${slideCount} detected`;
+    editorMeta.textContent = slideCount ? `${slideCount} slide${slideCount === 1 ? "" : "s"} detected` : "No slides detected";
+    editorSubMeta.innerHTML = slideCount
+      ? "Live preview is ready. Render when you want exportable PNG output."
+      : 'Add one or more <code>.slide</code> elements.';
+  }
+
+  function renderLiveMarkup() {
+    const iframe = document.createElement("iframe");
+    iframe.id = "frame";
+    iframe.title = "Live HTML preview";
+    iframe.srcdoc = cleanHTML(textarea.value);
+    return iframe;
+  }
+
+  function renderEmptyStage(title, text) {
+    const wrap = document.createElement("div");
+    wrap.className = "emptyStage";
+    wrap.innerHTML = `<div><strong>${title}</strong>${text}</div>`;
+    return wrap;
+  }
+
+  function paintViewport() {
+    viewportStage.innerHTML = "";
+
+    if (activeView === "live") {
+      viewportStage.appendChild(renderLiveMarkup());
+      const slideCount = countSlides(textarea.value);
+      outputSummary.innerHTML = slideCount
+        ? `Live source preview. <strong>${slideCount}</strong> slide${slideCount === 1 ? "" : "s"} currently detected.`
+        : "Live source preview. Add <code>.slide</code> elements to prepare a render.";
+      return;
+    }
+
+    if (!previewSlides.length) {
+      viewportStage.appendChild(renderEmptyStage("No rendered slides yet", "Render slides to review the exported output here."));
+      outputSummary.textContent = "Rendered output will appear here after a successful render.";
+      return;
+    }
+
+    const slide = previewSlides[activeSlideIndex];
+    const image = document.createElement("img");
+    image.className = "renderImage";
+    image.alt = `Slide ${slide.index}`;
+    image.src = slide.dataUrl;
+    viewportStage.appendChild(image);
+    outputSummary.textContent = `${previewSlides.length} rendered slide${previewSlides.length === 1 ? "" : "s"} ready for review.`;
   }
 
   function stopPolling() {
@@ -1141,25 +826,6 @@ svg {
       clearTimeout(pollTimer);
       pollTimer = null;
     }
-  }
-
-  function resetRenderedState(message) {
-    stopPolling();
-    previewSessionId = "";
-    currentJobId = "";
-    previewSlides = [];
-    activeSlideIndex = 0;
-    downloadBtn.disabled = true;
-    prevSlideBtn.disabled = true;
-    nextSlideBtn.disabled = true;
-    filmstrip.innerHTML = "";
-    renderStage.className = "emptyState";
-    renderStage.textContent = message;
-    railSummary.textContent = "No converted slides yet.";
-    activeSlideMeta.textContent = "No active slide";
-    fileMeta.textContent = "No preview session yet";
-    analyticsState.textContent = "Idle";
-    setProgress(0, 0, 0);
   }
 
   function updateNavButtons() {
@@ -1171,10 +837,6 @@ svg {
   function renderFilmstrip() {
     filmstrip.innerHTML = "";
 
-    if (!previewSlides.length) {
-      return;
-    }
-
     previewSlides.forEach((slide, index) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -1185,6 +847,7 @@ svg {
       `;
       button.addEventListener("click", function () {
         activeSlideIndex = index;
+        setActiveView("rendered");
         renderActiveSlide();
       });
       filmstrip.appendChild(button);
@@ -1193,24 +856,47 @@ svg {
 
   function renderActiveSlide() {
     if (!previewSlides.length) {
-      renderStage.className = "emptyState";
-      renderStage.textContent = "Render slides to inspect them one by one.";
-      activeSlideMeta.textContent = "No active slide";
+      activeSlideMeta.textContent = "No active rendered slide";
+      paintViewport();
       updateNavButtons();
       return;
     }
 
     const slide = previewSlides[activeSlideIndex];
-    renderStage.className = "";
-    renderStage.innerHTML = `
-      <div class="slideFrame">
-        <img class="activeSlide" src="${slide.dataUrl}" alt="Slide ${slide.index}">
-      </div>
-    `;
-    railSummary.textContent = `${previewSlides.length} rendered slide${previewSlides.length === 1 ? "" : "s"} ready for review.`;
     activeSlideMeta.textContent = `Showing slide ${slide.index} of ${previewSlides.length} - ${slide.name}`;
     renderFilmstrip();
     updateNavButtons();
+    paintViewport();
+  }
+
+  function resetRenderedState() {
+    stopPolling();
+    previewSessionId = "";
+    currentJobId = "";
+    previewSlides = [];
+    activeSlideIndex = 0;
+    downloadBtn.disabled = true;
+    prevSlideBtn.disabled = true;
+    nextSlideBtn.disabled = true;
+    renderBtn.disabled = false;
+    renderBtn.textContent = "Render Slides";
+    sourceRenderChip.innerHTML = "<strong>Status</strong> Waiting";
+    activeSlideMeta.textContent = "No active rendered slide";
+    filmstrip.innerHTML = "";
+    fileMeta.textContent = "No preview session yet";
+    setProgress(0, 0, 0);
+    paintViewport();
+  }
+
+  function queuePreviewRefresh() {
+    if (previewTimer) {
+      clearTimeout(previewTimer);
+    }
+
+    previewTimer = setTimeout(function () {
+      paintViewport();
+      previewTimer = null;
+    }, 180);
   }
 
   function appendSlides(slides) {
@@ -1227,6 +913,7 @@ svg {
 
     previewSlides = previewSlides.concat(newSlides).sort((a, b) => a.index - b.index);
     activeSlideIndex = previewSlides.length - 1;
+    setActiveView("rendered");
     renderActiveSlide();
   }
 
@@ -1244,10 +931,13 @@ svg {
     }
 
     textarea.value = await file.text();
-    renderLivePreview();
-    resetRenderedState("Loaded a new HTML file. Render slides to review them.");
+    currentFileName = file.name;
+    resetRenderedState();
+    updateSourceMeta();
     statusValue.textContent = `Loaded ${file.name}`;
-    analyticsState.textContent = "Loaded";
+    sourceRenderChip.innerHTML = "<strong>Status</strong> Source ready";
+    fileMeta.textContent = "File loaded and live preview updated";
+    setActiveView("live");
   }
 
   async function pollPreviewStatus(jobId) {
@@ -1261,13 +951,13 @@ svg {
     appendSlides(data.slides || []);
     setProgress(data.progress || 0, data.completed || 0, data.total || 0);
     fileMeta.textContent = data.sessionId ? "Preview session ready" : "Rendering in progress";
-    analyticsState.textContent = data.status === "completed" ? "Ready" : "Rendering";
 
     if (data.status === "failed") {
       stopPolling();
       renderBtn.disabled = false;
+      renderBtn.textContent = "Render Slides";
+      sourceRenderChip.innerHTML = "<strong>Status</strong> Failed";
       statusValue.textContent = data.error || "Preview failed";
-      analyticsState.textContent = "Failed";
       throw new Error(data.error || "Preview failed");
     }
 
@@ -1276,12 +966,15 @@ svg {
       previewSessionId = data.sessionId || "";
       downloadBtn.disabled = !previewSessionId;
       renderBtn.disabled = false;
+      renderBtn.textContent = "Render Again";
+      sourceRenderChip.innerHTML = "<strong>Status</strong> Ready";
       statusValue.textContent = "Render complete";
       fileMeta.textContent = previewSessionId ? "ZIP will be removed from the server after download" : "No preview session yet";
       return;
     }
 
     statusValue.textContent = "Rendering slides";
+    sourceRenderChip.innerHTML = "<strong>Status</strong> Rendering";
     pollTimer = setTimeout(function () {
       pollPreviewStatus(jobId).catch(handleRenderError);
     }, 450);
@@ -1291,17 +984,19 @@ svg {
     console.error(error);
     stopPolling();
     renderBtn.disabled = false;
+    renderBtn.textContent = "Render Slides";
     downloadBtn.disabled = true;
     statusValue.textContent = error.message || "Preview failed";
     fileMeta.textContent = "No preview session yet";
-    analyticsState.textContent = "Failed";
+    sourceRenderChip.innerHTML = "<strong>Status</strong> Failed";
     alert(error.message || "Preview failed");
   }
 
   livePreviewBtn.addEventListener("click", function () {
-    renderLivePreview();
-    statusValue.textContent = "Live preview refreshed";
-    analyticsState.textContent = "Previewing";
+    setActiveView("live");
+    paintViewport();
+    statusValue.textContent = "Preview refreshed";
+    sourceRenderChip.innerHTML = "<strong>Status</strong> Source ready";
   });
 
   renderBtn.addEventListener("click", async function () {
@@ -1313,11 +1008,19 @@ svg {
     }
 
     stopPolling();
-    resetRenderedState("Rendering has started. Slides will appear here one by one.");
+    previewSessionId = "";
+    currentJobId = "";
+    previewSlides = [];
+    activeSlideIndex = 0;
+    setProgress(0, 0, 0);
+    filmstrip.innerHTML = "";
+    activeSlideMeta.textContent = "Rendering has started";
+    downloadBtn.disabled = true;
     renderBtn.disabled = true;
+    renderBtn.textContent = "Rendering...";
     statusValue.textContent = "Queueing render job";
-    analyticsState.textContent = "Queued";
-    renderLivePreview();
+    sourceRenderChip.innerHTML = "<strong>Status</strong> Queued";
+    setActiveView("rendered");
 
     try {
       const res = await fetch("/preview/start", {
@@ -1349,7 +1052,7 @@ svg {
 
     statusValue.textContent = "Downloading ZIP";
     fileMeta.textContent = "The preview files will be deleted after download";
-    analyticsState.textContent = "Downloading";
+    sourceRenderChip.innerHTML = "<strong>Status</strong> Downloading";
     window.location.href = `/download/${previewSessionId}`;
     downloadBtn.disabled = true;
   });
@@ -1357,6 +1060,7 @@ svg {
   prevSlideBtn.addEventListener("click", function () {
     if (activeSlideIndex > 0) {
       activeSlideIndex -= 1;
+      setActiveView("rendered");
       renderActiveSlide();
     }
   });
@@ -1364,8 +1068,17 @@ svg {
   nextSlideBtn.addEventListener("click", function () {
     if (activeSlideIndex < previewSlides.length - 1) {
       activeSlideIndex += 1;
+      setActiveView("rendered");
       renderActiveSlide();
     }
+  });
+
+  liveTabBtn.addEventListener("click", function () {
+    setActiveView("live");
+  });
+
+  renderedTabBtn.addEventListener("click", function () {
+    setActiveView("rendered");
   });
 
   filePickerBtn.addEventListener("click", function () {
@@ -1380,6 +1093,19 @@ svg {
       alert("Could not read that file.");
     } finally {
       fileInput.value = "";
+    }
+  });
+
+  textarea.addEventListener("input", function () {
+    currentFileName = currentFileName || "Untitled";
+    updateSourceMeta();
+    queuePreviewRefresh();
+
+    if (previewSlides.length || previewSessionId || currentJobId) {
+      resetRenderedState();
+      statusValue.textContent = "Source changed";
+      fileMeta.textContent = "Render again to refresh the exported output";
+      sourceRenderChip.innerHTML = "<strong>Status</strong> Source changed";
     }
   });
 
@@ -1408,7 +1134,30 @@ svg {
     }
   });
 
-  resetRenderedState("Render slides to inspect them one by one.");
+  document.addEventListener("keydown", function (event) {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault();
+      if (!renderBtn.disabled) {
+        renderBtn.click();
+      }
+      return;
+    }
+
+    if (event.target === textarea) {
+      return;
+    }
+
+    if (event.key === "ArrowLeft" && !prevSlideBtn.disabled) {
+      prevSlideBtn.click();
+    }
+
+    if (event.key === "ArrowRight" && !nextSlideBtn.disabled) {
+      nextSlideBtn.click();
+    }
+  });
+
+  updateSourceMeta();
+  paintViewport();
 })();
 </script>
 </body>
