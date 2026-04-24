@@ -78,6 +78,35 @@ body {
   font-size: 14px;
 }
 
+.dropZone {
+  border: 1px dashed rgba(200, 241, 53, 0.35);
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(200, 241, 53, 0.04);
+  color: var(--muted);
+  text-align: center;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.dropZone strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.dropZone.isActive {
+  border-color: var(--accent);
+  background: rgba(200, 241, 53, 0.1);
+  color: var(--text);
+}
+
+.fileButton {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 textarea {
   width: 100%;
   min-height: 320px;
@@ -273,6 +302,15 @@ iframe {
         <p class="subtitle">Preview the live HTML, render the final converted PNG slides, then download the exact rendered set.</p>
       </div>
 
+      <div id="dropZone" class="dropZone">
+        <strong>Drop an HTML file here</strong>
+        or choose a local `.html` file to load it into the editor
+        <div>
+          <button id="filePickerBtn" type="button" class="secondary fileButton">Choose HTML File</button>
+          <input id="fileInput" type="file" accept=".html,text/html" hidden>
+        </div>
+      </div>
+
       <textarea id="htmlInput" placeholder="Paste HTML that contains .slide elements"></textarea>
 
       <div class="actions">
@@ -314,6 +352,9 @@ iframe {
   const livePreviewBtn = document.getElementById("livePreviewBtn");
   const renderBtn = document.getElementById("renderBtn");
   const downloadBtn = document.getElementById("downloadBtn");
+  const filePickerBtn = document.getElementById("filePickerBtn");
+  const fileInput = document.getElementById("fileInput");
+  const dropZone = document.getElementById("dropZone");
   const textarea = document.getElementById("htmlInput");
   const frame = document.getElementById("frame");
   const loader = document.getElementById("loader");
@@ -345,6 +386,26 @@ iframe {
     frame.srcdoc = cleanHTML(textarea.value);
   }
 
+  async function loadHtmlFile(file) {
+    if (!file) {
+      return;
+    }
+
+    const fileName = file.name.toLowerCase();
+    const isHtmlFile = file.type === "text/html" || fileName.endsWith(".html") || fileName.endsWith(".htm");
+
+    if (!isHtmlFile) {
+      alert("Please drop an HTML file.");
+      return;
+    }
+
+    const text = await file.text();
+    textarea.value = text;
+    renderLivePreview();
+    resetConvertedPreview("Loaded a new HTML file. Render slides to preview the converted PNG output.");
+    setStatus(`Loaded ${file.name}.`);
+  }
+
   function resetConvertedPreview(message) {
     previewSessionId = "";
     downloadBtn.disabled = true;
@@ -373,6 +434,47 @@ iframe {
   livePreviewBtn.addEventListener("click", function () {
     renderLivePreview();
     setStatus("Live HTML preview updated.");
+  });
+
+  filePickerBtn.addEventListener("click", function () {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", async function () {
+    try {
+      await loadHtmlFile(fileInput.files[0]);
+    } catch (error) {
+      console.error(error);
+      alert("Could not read that file.");
+    } finally {
+      fileInput.value = "";
+    }
+  });
+
+  ["dragenter", "dragover"].forEach(eventName => {
+    dropZone.addEventListener(eventName, function (event) {
+      event.preventDefault();
+      dropZone.classList.add("isActive");
+    });
+  });
+
+  ["dragleave", "dragend"].forEach(eventName => {
+    dropZone.addEventListener(eventName, function () {
+      dropZone.classList.remove("isActive");
+    });
+  });
+
+  dropZone.addEventListener("drop", async function (event) {
+    event.preventDefault();
+    dropZone.classList.remove("isActive");
+
+    try {
+      const file = event.dataTransfer.files[0];
+      await loadHtmlFile(file);
+    } catch (error) {
+      console.error(error);
+      alert("Could not read that file.");
+    }
   });
 
   renderBtn.addEventListener("click", async function () {

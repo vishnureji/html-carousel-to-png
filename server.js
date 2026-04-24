@@ -105,43 +105,37 @@ async function renderSlides(html) {
       });
     });
 
-    const slideBoxes = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll(".slide")).map(el => {
-        const rect = el.getBoundingClientRect();
-        return {
-          x: rect.x,
-          y: rect.y,
-          width: Math.ceil(rect.width),
-          height: Math.ceil(rect.height)
-        };
-      });
+    const slideCount = await page.evaluate(() => {
+      return document.querySelectorAll(".slide").length;
     });
 
-    if (!slideBoxes.length) {
+    if (!slideCount) {
       throw new Error("No slides found");
     }
 
     const files = [];
 
-    for (let i = 0; i < slideBoxes.length; i += 1) {
+    for (let i = 0; i < slideCount; i += 1) {
       await page.evaluate(index => {
         document.querySelectorAll(".slide").forEach((el, slideIndex) => {
           el.style.display = slideIndex === index ? "flex" : "none";
+          el.style.visibility = slideIndex === index ? "visible" : "hidden";
+          el.style.opacity = slideIndex === index ? "1" : "0";
         });
       }, i);
 
-      const box = slideBoxes[i];
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const slideHandles = await page.$$(".slide");
+      const currentSlide = slideHandles[i];
+
+      if (!currentSlide) {
+        throw new Error(`Slide ${i + 1} could not be rendered`);
+      }
+
       const filePath = path.join(requestDir, `slide-${i + 1}.png`);
 
-      await page.screenshot({
-        path: filePath,
-        clip: {
-          x: Math.max(0, box.x),
-          y: Math.max(0, box.y),
-          width: box.width,
-          height: box.height
-        }
-      });
+      await currentSlide.screenshot({ path: filePath });
 
       files.push(filePath);
     }
