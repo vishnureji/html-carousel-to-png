@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HTML to PNG Pro</title>
+<meta name="description" content="Convert Claude-generated HTML carousels into social media PNG slides. Edit the HTML in the built-in text editor, update copy without spending more Claude limit, preview changes, and export polished carousel images.">
+<title>Claude Carousel Converter | HTML to PNG</title>
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
@@ -674,8 +675,8 @@ iframe,
     <header class="topbar">
       <div class="brand">
         <p class="eyebrow">HTML to PNG Pro</p>
-        <h1>Render slides without hunting through the UI</h1>
-        <p>Load source on the left, inspect output on the right, and keep the main actions visible the whole time.</p>
+        <h1>Convert Claude HTML carousels into social-ready PNG slides</h1>
+        <p>Edit carousel HTML, update the content inside the built-in editor, and export polished PNGs for social media without wasting more Claude limit.</p>
       </div>
       <div class="topbarActions">
         <div id="headerFileChip" class="chip"><strong>File</strong> Untitled</div>
@@ -688,15 +689,15 @@ iframe,
       <section class="panel sourcePane">
         <div class="sourceHeader">
           <h2 class="sectionTitle">Source</h2>
-          <p class="sectionSub">Bring in HTML, adjust it in place, then render when the live preview looks right.</p>
+          <p class="sectionSub">Paste a Claude-generated HTML carousel, edit the copy in place, and render each slide into PNG format when the preview looks right.</p>
         </div>
 
         <div class="sourceBlock">
           <div id="dropZone" class="sourceCard">
             <div class="sourceTop">
               <div>
-                <strong>Drop an HTML file here</strong>
-                <p>The renderer exports each element with the <code>.slide</code> class as a separate PNG.</p>
+                <strong>Drop a Claude carousel HTML file here</strong>
+                <p>The renderer exports each element with the <code>.slide</code> class as a separate PNG slide ready for social media posting.</p>
               </div>
               <div class="sourceMeta">
                 <div id="sourceFileChip" class="chip"><strong>File</strong> Untitled</div>
@@ -713,7 +714,7 @@ iframe,
             </div>
 
             <div class="hintRow">
-              <span>Preview updates while you type. Render only when you want a new PNG set.</span>
+              <span>Use the built-in editor to update text, calls to action, or layout details before exporting a new PNG set.</span>
               <div class="kbdHints">
                 <kbd>Ctrl</kbd><kbd>Enter</kbd><span>render</span>
                 <kbd>Left</kbd><kbd>Right</kbd><span>review</span>
@@ -742,7 +743,7 @@ iframe,
             <div class="statusCard">
               <div class="statusCardLabel">Editor</div>
               <div id="editorMeta" class="statusCardValue">No slides detected</div>
-              <div id="editorSubMeta" class="statusCardSub">Add one or more <code>.slide</code> elements.</div>
+              <div id="editorSubMeta" class="statusCardSub">Add one or more <code>.slide</code> elements from your carousel HTML.</div>
             </div>
           </div>
         </div>
@@ -750,7 +751,7 @@ iframe,
         <div class="editorBlock">
           <div class="editorToolbar">
             <strong>Source HTML</strong>
-            <span>Edit here while watching the output panel update.</span>
+            <span>Edit Claude-generated carousel HTML here while the output panel stays in sync.</span>
           </div>
           <div class="findReplaceBar">
             <div class="fieldGroup">
@@ -777,7 +778,7 @@ iframe,
           <div class="outputTopbar">
             <div>
               <h2 class="sectionTitle">Output</h2>
-              <p id="outputSummary" class="sectionSub">Preview your current source or switch to rendered slides.</p>
+              <p id="outputSummary" class="sectionSub">Preview your current carousel HTML or switch to rendered PNG slides.</p>
             </div>
             <div class="tabRow">
               <button id="liveTabBtn" type="button" class="tab isActive">Live</button>
@@ -895,8 +896,8 @@ iframe,
     headerSlideChip.innerHTML = `<strong>Slides</strong> ${slideCount} detected`;
     editorMeta.textContent = slideCount ? `${slideCount} slide${slideCount === 1 ? "" : "s"} detected` : "No slides detected";
     editorSubMeta.innerHTML = slideCount
-      ? "Live preview is ready. Render when you want exportable PNG output."
-      : 'Add one or more <code>.slide</code> elements.';
+      ? "Live preview is ready. Render when you want social-ready PNG output."
+      : 'Add one or more <code>.slide</code> elements from your carousel HTML.';
   }
 
   function renderLiveMarkup() {
