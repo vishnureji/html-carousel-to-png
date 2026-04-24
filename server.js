@@ -9,6 +9,16 @@ const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(cors());
 
+const path = require("path");
+
+// Serve static files (your frontend)
+app.use(express.static(path.join(__dirname, "public")));
+
+// Serve index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 app.post("/export", async (req, res) => {
   try {
     console.log("🚀 Request received");

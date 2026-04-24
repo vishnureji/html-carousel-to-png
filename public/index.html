@@ -127,7 +127,7 @@ previewBtn.addEventListener("click", function () {
     loader.style.display = "flex";
 
     try {
-      const res = await fetch("https://claude-html-carousel-to-png-files.onrender.com/export", {
+      const res = await fetch("/export", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
