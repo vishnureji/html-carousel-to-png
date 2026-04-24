@@ -158,7 +158,7 @@ button {
 .sourcePane {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(360px, 1fr);
+  grid-template-rows: auto auto auto;
 }
 
 .sourceHeader,
@@ -368,6 +368,68 @@ kbd {
 .editorToolbar span {
   color: var(--muted);
   font-size: 12px;
+}
+
+.findReplaceBar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fieldGroup label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fieldGroup input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(6, 6, 6, 0.82);
+  color: var(--text);
+  outline: none;
+}
+
+.fieldGroup input:focus {
+  border-color: rgba(255, 53, 0, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 53, 0, 0.12);
+}
+
+.replaceActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+  justify-content: flex-end;
+}
+
+.miniBtn {
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.findStatus {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 textarea {
@@ -581,7 +643,8 @@ iframe,
   .statusGrid,
   .outputTopbar,
   .filmstripHeader,
-  .editorToolbar {
+  .editorToolbar,
+  .findReplaceBar {
     display: grid;
   }
 
@@ -689,6 +752,22 @@ iframe,
             <strong>Source HTML</strong>
             <span>Edit here while watching the output panel update.</span>
           </div>
+          <div class="findReplaceBar">
+            <div class="fieldGroup">
+              <label for="findInput">Find</label>
+              <input id="findInput" type="text" placeholder="Text to find">
+            </div>
+            <div class="fieldGroup">
+              <label for="replaceInput">Replace</label>
+              <input id="replaceInput" type="text" placeholder="Replacement text">
+            </div>
+            <div class="replaceActions">
+              <button id="findNextBtn" type="button" class="btn miniBtn">Next</button>
+              <button id="replaceOneBtn" type="button" class="btn miniBtn">Replace</button>
+              <button id="replaceAllBtn" type="button" class="btn miniBtn">Replace All</button>
+            </div>
+          </div>
+          <div id="findStatus" class="findStatus">Search inside the HTML editor and replace matching text.</div>
           <textarea id="htmlInput" placeholder="Paste HTML that contains .slide elements"></textarea>
         </div>
       </section>
@@ -739,6 +818,12 @@ iframe,
   const fileInput = document.getElementById("fileInput");
   const dropZone = document.getElementById("dropZone");
   const textarea = document.getElementById("htmlInput");
+  const findInput = document.getElementById("findInput");
+  const replaceInput = document.getElementById("replaceInput");
+  const findNextBtn = document.getElementById("findNextBtn");
+  const replaceOneBtn = document.getElementById("replaceOneBtn");
+  const replaceAllBtn = document.getElementById("replaceAllBtn");
+  const findStatus = document.getElementById("findStatus");
   const viewportStage = document.getElementById("viewportStage");
   const filmstrip = document.getElementById("filmstrip");
   const progressBar = document.getElementById("progressBar");
@@ -766,6 +851,7 @@ iframe,
   let previewTimer = null;
   let currentFileName = "Untitled";
   let activeView = "live";
+  let lastFindIndex = -1;
 
   function cleanHTML(html) {
     while (html.includes("<!--")) {
@@ -819,6 +905,101 @@ iframe,
     iframe.title = "Live HTML preview";
     iframe.srcdoc = cleanHTML(textarea.value);
     return iframe;
+  }
+
+  function notifyEditorChanged(statusText) {
+    updateSourceMeta();
+    queuePreviewRefresh();
+
+    if (previewSlides.length || previewSessionId || currentJobId) {
+      resetRenderedState();
+      statusValue.textContent = statusText || "Source changed";
+      fileMeta.textContent = "Render again to refresh the exported output";
+      sourceRenderChip.innerHTML = "<strong>Status</strong> Source changed";
+    }
+  }
+
+  function focusMatch(start, end, message) {
+    textarea.focus();
+    textarea.setSelectionRange(start, end);
+    findStatus.textContent = message;
+  }
+
+  function findNextMatch() {
+    const needle = findInput.value;
+    const haystack = textarea.value;
+
+    if (!needle) {
+      findStatus.textContent = "Enter text in Find to search the editor.";
+      return -1;
+    }
+
+    const searchStart = textarea.selectionEnd > lastFindIndex ? textarea.selectionEnd : lastFindIndex + 1;
+    let matchIndex = haystack.indexOf(needle, Math.max(0, searchStart));
+
+    if (matchIndex === -1) {
+      matchIndex = haystack.indexOf(needle, 0);
+    }
+
+    if (matchIndex === -1) {
+      findStatus.textContent = `No matches found for "${needle}".`;
+      return -1;
+    }
+
+    lastFindIndex = matchIndex;
+    focusMatch(matchIndex, matchIndex + needle.length, `Match found at character ${matchIndex + 1}.`);
+    return matchIndex;
+  }
+
+  function replaceCurrentMatch() {
+    const needle = findInput.value;
+
+    if (!needle) {
+      findStatus.textContent = "Enter text in Find before replacing.";
+      return;
+    }
+
+    const selection = textarea.value.slice(textarea.selectionStart, textarea.selectionEnd);
+
+    if (selection !== needle) {
+      const foundIndex = findNextMatch();
+
+      if (foundIndex === -1) {
+        return;
+      }
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const replacement = replaceInput.value;
+
+    textarea.setRangeText(replacement, start, end, "select");
+    lastFindIndex = start + replacement.length - 1;
+    notifyEditorChanged("Source updated");
+    focusMatch(start, start + replacement.length, `Replaced one match with "${replacement}".`);
+  }
+
+  function replaceAllMatches() {
+    const needle = findInput.value;
+
+    if (!needle) {
+      findStatus.textContent = "Enter text in Find before replacing.";
+      return;
+    }
+
+    const haystack = textarea.value;
+    const matchCount = haystack.split(needle).length - 1;
+
+    if (!matchCount) {
+      findStatus.textContent = `No matches found for "${needle}".`;
+      return;
+    }
+
+    textarea.value = haystack.split(needle).join(replaceInput.value);
+    lastFindIndex = -1;
+    notifyEditorChanged("Source updated");
+    findStatus.textContent = `Replaced ${matchCount} match${matchCount === 1 ? "" : "es"}.`;
+    textarea.focus();
   }
 
   function renderEmptyStage(title, text) {
@@ -1132,15 +1313,27 @@ iframe,
 
   textarea.addEventListener("input", function () {
     currentFileName = currentFileName || "Untitled";
-    updateSourceMeta();
-    queuePreviewRefresh();
+    lastFindIndex = -1;
+    notifyEditorChanged("Source changed");
+  });
 
-    if (previewSlides.length || previewSessionId || currentJobId) {
-      resetRenderedState();
-      statusValue.textContent = "Source changed";
-      fileMeta.textContent = "Render again to refresh the exported output";
-      sourceRenderChip.innerHTML = "<strong>Status</strong> Source changed";
-    }
+  findNextBtn.addEventListener("click", function () {
+    findNextMatch();
+  });
+
+  replaceOneBtn.addEventListener("click", function () {
+    replaceCurrentMatch();
+  });
+
+  replaceAllBtn.addEventListener("click", function () {
+    replaceAllMatches();
+  });
+
+  findInput.addEventListener("input", function () {
+    lastFindIndex = -1;
+    findStatus.textContent = findInput.value
+      ? `Ready to search for "${findInput.value}".`
+      : "Search inside the HTML editor and replace matching text.";
   });
 
   ["dragenter", "dragover"].forEach(eventName => {
