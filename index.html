@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Slide Exporter Pro</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Inter, system-ui;
+  background: #0b0b0b;
+  color: #fff;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+.left {
+  width: 50%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.right {
+  width: 50%;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+textarea {
+  flex: 1;
+  background: #111;
+  color: #fff;
+  border: 1px solid #222;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+button {
+  margin-top: 12px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #c8f135;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+iframe {
+  width: 360px;
+  height: 640px;
+  border-radius: 16px;
+  border: none;
+  background: #000;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="loader" id="loader">Rendering slides...</div>
+
+<div class="container">
+  <div class="left">
+    <h2>Paste HTML</h2>
+    <textarea id="htmlInput"></textarea>
+
+    <button id="previewBtn">Preview</button>
+    <button id="exportBtn">Export PNG</button>
+  </div>
+
+  <div class="right">
+    <iframe id="frame"></iframe>
+  </div>
+</div>
+
+<script>
+(function () {
+
+  const previewBtn = document.getElementById("previewBtn");
+  const exportBtn = document.getElementById("exportBtn");
+  const textarea = document.getElementById("htmlInput");
+  const frame = document.getElementById("frame");
+  const loader = document.getElementById("loader");
+
+    function cleanHTML(html) {
+    while (html.includes("<!--")) {
+        const start = html.indexOf("<!--");
+        const end = html.indexOf("-->", start);
+        if (end === -1) break;
+        html = html.slice(0, start) + html.slice(end + 3);
+    }
+    return html;
+    }
+
+  // PREVIEW
+previewBtn.addEventListener("click", function () {
+
+  let html = textarea.value;
+
+  // remove injected comments safely
+  html = html.replace(/<!--[\s\S]*?-->/g, "");
+
+  // direct render (NO string wrapping)
+  frame.srcdoc = html;
+
+});
+
+  // EXPORT
+  exportBtn.addEventListener("click", async function () {
+    loader.style.display = "flex";
+
+    try {
+      const res = await fetch("http://localhost:3000/export", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          html: cleanHTML(textarea.value)
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("Server error");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "slides.zip";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+    } catch (err) {
+      console.error(err);
+      alert("Export failed. Check backend console.");
+    }
+
+    loader.style.display = "none";
+  });
+
+})();
+</script>
+
+</body>
+</html>
