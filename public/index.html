@@ -135,6 +135,7 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(380px, 0.95fr);
   gap: 18px;
+  align-items: start;
 }
 
 .panel {
@@ -149,7 +150,6 @@ button {
 .sourcePane {
   display: grid;
   grid-template-rows: auto auto minmax(360px, 1fr);
-  min-height: calc(100vh - 120px);
 }
 
 .sourceHeader,
@@ -380,8 +380,7 @@ textarea:focus {
 
 .outputPane {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  min-height: calc(100vh - 120px);
+  grid-template-rows: auto auto auto;
   position: sticky;
   top: 22px;
 }
@@ -419,12 +418,11 @@ textarea:focus {
 
 .outputViewport {
   padding-top: 12px;
-  min-height: 0;
 }
 
 .viewportSurface {
-  height: 100%;
-  min-height: 520px;
+  display: grid;
+  place-items: center;
   padding: 12px;
   border-radius: var(--radius-md);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
@@ -433,8 +431,9 @@ textarea:focus {
 }
 
 .viewportStage {
-  width: 100%;
-  height: 100%;
+  width: min(100%, 430px);
+  aspect-ratio: 9 / 16;
+  max-height: min(70vh, 760px);
   border-radius: 12px;
   background: #020202;
   overflow: hidden;
@@ -497,6 +496,7 @@ iframe,
   display: flex;
   gap: 10px;
   overflow-x: auto;
+  padding-bottom: 2px;
 }
 
 .thumb {
@@ -540,7 +540,6 @@ iframe,
 
   .sourcePane,
   .outputPane {
-    min-height: auto;
     position: static;
   }
 }
@@ -566,7 +565,12 @@ iframe,
   }
 
   .viewportSurface {
-    min-height: 400px;
+    min-height: auto;
+  }
+
+  .viewportStage {
+    width: 100%;
+    max-width: 420px;
   }
 }
 </style>

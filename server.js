@@ -118,12 +118,22 @@ async function renderSlides(html, onProgress) {
       <html>
       <head>
         <meta charset="UTF-8">
-        <style>body{margin:0}</style>
+        <style>
+          html, body {
+            margin: 0;
+            background: transparent;
+          }
+        </style>
       </head>
       <body>${cleanHtml(html)}</body>
       </html>`,
       { waitUntil: "networkidle0" }
     );
+
+    await page.evaluate(() => {
+      document.documentElement.style.background = "transparent";
+      document.body.style.background = "transparent";
+    });
 
     await page.evaluate(async () => {
       await document.fonts.ready;
@@ -178,7 +188,10 @@ async function renderSlides(html, onProgress) {
 
       const filePath = path.join(requestDir, `slide-${i + 1}.png`);
 
-      await currentSlide.screenshot({ path: filePath });
+      await currentSlide.screenshot({
+        path: filePath,
+        omitBackground: true
+      });
       const image = await fsp.readFile(filePath, { encoding: "base64" });
       const slide = buildSlidePayload(i, filePath, image);
 
