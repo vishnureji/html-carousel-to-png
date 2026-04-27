@@ -16,6 +16,8 @@ const app = express();
 const previewSessions = new Map();
 const previewJobs = new Map();
 const PREVIEW_TTL_MS = 15 * 60 * 1000;
+const EXPORT_WIDTH = 1080;
+const EXPORT_HEIGHT = 1350;
 
 app.use(express.json({ limit: "25mb" }));
 app.use(cors());
@@ -88,9 +90,14 @@ function scheduleJobCleanup(jobId) {
   }, PREVIEW_TTL_MS);
 }
 
-async function renderSlides(html, onProgress) {
+function normalizeScale(scale) {
+  return Number(scale) === 2 ? 2 : 1;
+}
+
+async function renderSlides(html, options = {}, onProgress) {
   let browser;
   let requestDir;
+  const exportScale = normalizeScale(options.scale);
 
   try {
     requestDir = await fsp.mkdtemp(path.join(os.tmpdir(), "html-to-png-"));
@@ -108,9 +115,9 @@ async function renderSlides(html, onProgress) {
     const page = await browser.newPage();
 
     await page.setViewport({
-      width: 1400,
-      height: 1800,
-      deviceScaleFactor: 2
+      width: EXPORT_WIDTH,
+      height: EXPORT_HEIGHT,
+      deviceScaleFactor: exportScale
     });
 
     await page.setContent(
@@ -122,6 +129,13 @@ async function renderSlides(html, onProgress) {
           html, body {
             margin: 0;
             background: transparent;
+            width: ${EXPORT_WIDTH}px;
+            min-height: ${EXPORT_HEIGHT}px;
+            overflow: hidden;
+          }
+
+          body {
+            display: block;
           }
         </style>
       </head>
@@ -140,13 +154,15 @@ async function renderSlides(html, onProgress) {
       await new Promise(resolve => setTimeout(resolve, 300));
     });
 
-    await page.evaluate(() => {
+    await page.evaluate((width, height) => {
       document.querySelectorAll(".slide").forEach(el => {
+        el.style.width = `${width}px`;
+        el.style.height = `${height}px`;
         el.style.display = "flex";
         el.style.visibility = "visible";
         el.style.opacity = "1";
       });
-    });
+    }, EXPORT_WIDTH, EXPORT_HEIGHT);
 
     const slideCount = await page.evaluate(() => {
       return document.querySelectorAll(".slide").length;
@@ -244,7 +260,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/preview/start", async (req, res) => {
-  const { html } = req.body;
+  const { html, scale } = req.body;
 
   if (!html) {
     return res.status(400).json({ error: "No HTML provided" });
@@ -269,7 +285,7 @@ app.post("/preview/start", async (req, res) => {
     try {
       job.status = "running";
 
-      const rendered = await renderSlides(html, async update => {
+      const rendered = await renderSlides(html, { scale }, async update => {
         if (typeof update.total === "number") {
           job.total = update.total;
         }
@@ -354,13 +370,13 @@ app.post("/export", async (req, res) => {
   try {
     console.log("Export request received");
 
-    const { html } = req.body;
+    const { html, scale } = req.body;
 
     if (!html) {
       return res.status(400).send("No HTML provided");
     }
 
-    const rendered = await renderSlides(html);
+    const rendered = await renderSlides(html, { scale });
     requestDir = rendered.requestDir;
 
     const zipPath = path.join(requestDir, "slides.zip");

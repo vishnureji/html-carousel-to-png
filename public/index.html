@@ -45,6 +45,7 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -396,7 +397,8 @@ kbd {
   text-transform: uppercase;
 }
 
-.fieldGroup input {
+.fieldGroup input,
+.fieldGroup select {
   width: 100%;
   min-width: 0;
   min-height: 40px;
@@ -408,9 +410,14 @@ kbd {
   outline: none;
 }
 
-.fieldGroup input:focus {
+.fieldGroup input:focus,
+.fieldGroup select:focus {
   border-color: rgba(255, 53, 0, 0.28);
   box-shadow: inset 0 0 0 1px rgba(255, 53, 0, 0.12);
+}
+
+.inlineField {
+  min-width: 148px;
 }
 
 .replaceActions {
@@ -711,6 +718,13 @@ iframe,
               <button id="livePreviewBtn" type="button" class="btn">Refresh Preview</button>
               <button id="renderBtn" type="button" class="btn btnPrimary">Render Slides</button>
               <button id="downloadBtn" type="button" class="btn" disabled>Download ZIP</button>
+              <div class="fieldGroup inlineField">
+                <label for="exportScale">Export Size</label>
+                <select id="exportScale">
+                  <option value="1">1x · 1080 × 1350</option>
+                  <option value="2">2x · 2160 × 2700</option>
+                </select>
+              </div>
             </div>
 
             <div class="hintRow">
@@ -817,6 +831,7 @@ iframe,
   const nextSlideBtn = document.getElementById("nextSlideBtn");
   const filePickerBtn = document.getElementById("filePickerBtn");
   const fileInput = document.getElementById("fileInput");
+  const exportScale = document.getElementById("exportScale");
   const dropZone = document.getElementById("dropZone");
   const textarea = document.getElementById("htmlInput");
   const findInput = document.getElementById("findInput");
@@ -853,6 +868,11 @@ iframe,
   let currentFileName = "Untitled";
   let activeView = "live";
   let lastFindIndex = -1;
+
+  function getExportScale() {
+    const scale = Number(exportScale.value);
+    return scale === 2 ? 2 : 1;
+  }
 
   function cleanHTML(html) {
     while (html.includes("<!--")) {
@@ -1091,6 +1111,7 @@ iframe,
     currentJobId = "";
     previewSlides = [];
     activeSlideIndex = 0;
+    exportScale.disabled = false;
     downloadBtn.disabled = true;
     prevSlideBtn.disabled = true;
     nextSlideBtn.disabled = true;
@@ -1166,11 +1187,14 @@ iframe,
 
     appendSlides(data.slides || []);
     setProgress(data.progress || 0, data.completed || 0, data.total || 0);
-    fileMeta.textContent = data.sessionId ? "Preview session ready" : "Rendering in progress";
+    fileMeta.textContent = data.sessionId
+      ? `Preview session ready at ${getExportScale()}x`
+      : `Rendering ${getExportScale()}x slides`;
 
     if (data.status === "failed") {
       stopPolling();
       renderBtn.disabled = false;
+      exportScale.disabled = false;
       renderBtn.textContent = "Render Slides";
       sourceRenderChip.innerHTML = "<strong>Status</strong> Failed";
       statusValue.textContent = data.error || "Preview failed";
@@ -1182,10 +1206,13 @@ iframe,
       previewSessionId = data.sessionId || "";
       downloadBtn.disabled = !previewSessionId;
       renderBtn.disabled = false;
+      exportScale.disabled = false;
       renderBtn.textContent = "Render Again";
       sourceRenderChip.innerHTML = "<strong>Status</strong> Ready";
       statusValue.textContent = "Render complete";
-      fileMeta.textContent = previewSessionId ? "ZIP will be removed from the server after download" : "No preview session yet";
+      fileMeta.textContent = previewSessionId
+        ? `ZIP will be removed from the server after download (${getExportScale()}x export)`
+        : "No preview session yet";
       return;
     }
 
@@ -1200,6 +1227,7 @@ iframe,
     console.error(error);
     stopPolling();
     renderBtn.disabled = false;
+    exportScale.disabled = false;
     renderBtn.textContent = "Render Slides";
     downloadBtn.disabled = true;
     statusValue.textContent = error.message || "Preview failed";
@@ -1231,6 +1259,7 @@ iframe,
     setProgress(0, 0, 0);
     filmstrip.innerHTML = "";
     activeSlideMeta.textContent = "Rendering has started";
+    exportScale.disabled = true;
     downloadBtn.disabled = true;
     renderBtn.disabled = true;
     renderBtn.textContent = "Rendering...";
@@ -1244,7 +1273,10 @@ iframe,
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ html })
+        body: JSON.stringify({
+          html,
+          scale: getExportScale()
+        })
       });
       const data = await res.json();
 
@@ -1335,6 +1367,15 @@ iframe,
     findStatus.textContent = findInput.value
       ? `Ready to search for "${findInput.value}".`
       : "Search inside the HTML editor and replace matching text.";
+  });
+
+  exportScale.addEventListener("change", function () {
+    if (previewSlides.length || previewSessionId || currentJobId) {
+      notifyEditorChanged("Export size changed");
+    } else {
+      statusValue.textContent = `Export size set to ${getExportScale()}x`;
+      fileMeta.textContent = `Next render will export at ${getExportScale()}x`;
+    }
   });
 
   ["dragenter", "dragover"].forEach(eventName => {
