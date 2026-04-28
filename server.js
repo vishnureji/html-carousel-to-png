@@ -115,6 +115,10 @@ function buildRenderStyles() {
       margin: 0 !important;
       isolation: isolate !important;
     }
+
+    [data-render-capture-root="true"] {
+      transform-origin: top left !important;
+    }
   `;
 }
 
@@ -173,21 +177,85 @@ async function renderSlides(html, options = {}, onProgress) {
       await new Promise(resolve => setTimeout(resolve, 300));
     });
 
-    await page.evaluate((width, height) => {
-      document.querySelectorAll(".slide").forEach(el => {
+    const renderContext = await page.evaluate((width, height) => {
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const sharedParent = slides.length && slides.every(el => el.parentElement === slides[0].parentElement)
+        ? slides[0].parentElement
+        : null;
+      const targetAspect = width / height;
+      let captureMode = "slide";
+
+      if (sharedParent) {
+        const parentRect = sharedParent.getBoundingClientRect();
+        const parentStyle = window.getComputedStyle(sharedParent);
+        const parentAspect = parentRect.width && parentRect.height
+          ? parentRect.width / parentRect.height
+          : 0;
+        const slidesFitParent = slides.every(el => {
+          const rect = el.getBoundingClientRect();
+          return rect.width <= parentRect.width + 1 && rect.height <= parentRect.height + 1;
+        });
+        const looksLikeFrame = parentRect.width > 0 &&
+          parentRect.height > 0 &&
+          Math.abs(parentAspect - targetAspect) < 0.05 &&
+          slidesFitParent &&
+          (parentStyle.overflow === "hidden" || parentStyle.position !== "static");
+
+        if (looksLikeFrame) {
+          captureMode = "frame";
+          const captureStage = document.createElement("div");
+          captureStage.dataset.renderCaptureRoot = "true";
+          captureStage.style.position = "fixed";
+          captureStage.style.left = "0";
+          captureStage.style.top = "0";
+          captureStage.style.width = `${width}px`;
+          captureStage.style.height = `${height}px`;
+          captureStage.style.overflow = "hidden";
+          captureStage.style.background = "transparent";
+          captureStage.style.zIndex = "2147483647";
+          captureStage.style.pointerEvents = "none";
+
+          const clonedRoot = sharedParent.cloneNode(true);
+          clonedRoot.dataset.renderClonedRoot = "true";
+          clonedRoot.style.position = "absolute";
+          clonedRoot.style.left = "0";
+          clonedRoot.style.top = "0";
+          clonedRoot.style.margin = "0";
+          clonedRoot.style.transform = `scale(${width / parentRect.width}, ${height / parentRect.height})`;
+          clonedRoot.style.transformOrigin = "top left";
+
+          captureStage.appendChild(clonedRoot);
+          document.body.appendChild(captureStage);
+        }
+      }
+
+      const renderSlides = captureMode === "frame"
+        ? Array.from(document.querySelectorAll("[data-render-cloned-root='true'] .slide"))
+        : slides;
+
+      renderSlides.forEach(el => {
         const display = window.getComputedStyle(el).display;
         el.dataset.renderDisplay = display && display !== "none" ? display : "block";
-        el.dataset.renderSlide = "true";
-        el.style.width = `${width}px`;
-        el.style.height = `${height}px`;
+
+        if (captureMode !== "frame") {
+          el.dataset.renderSlide = "true";
+          el.style.width = `${width}px`;
+          el.style.height = `${height}px`;
+        } else {
+          el.removeAttribute("data-render-slide");
+        }
+
         el.style.visibility = "visible";
         el.style.opacity = "1";
       });
+
+      return {
+        slideCount: slides.length,
+        captureMode
+      };
     }, EXPORT_WIDTH, EXPORT_HEIGHT);
 
-    const slideCount = await page.evaluate(() => {
-      return document.querySelectorAll(".slide").length;
-    });
+    const slideCount = renderContext.slideCount;
 
     if (!slideCount) {
       throw new Error("No slides found");
@@ -205,27 +273,38 @@ async function renderSlides(html, options = {}, onProgress) {
     const slides = [];
 
     for (let i = 0; i < slideCount; i += 1) {
-      await page.evaluate(index => {
-        document.querySelectorAll(".slide").forEach((el, slideIndex) => {
+      await page.evaluate((index, captureMode) => {
+        const selector = captureMode === "frame"
+          ? "[data-render-cloned-root='true'] .slide"
+          : ".slide";
+
+        document.querySelectorAll(selector).forEach((el, slideIndex) => {
           const active = slideIndex === index;
+          el.classList.remove("active", "exit");
+
+          if (active) {
+            el.classList.add("active");
+          }
+
           el.style.display = active ? (el.dataset.renderDisplay || "block") : "none";
           el.style.visibility = active ? "visible" : "hidden";
           el.style.opacity = active ? "1" : "0";
         });
-      }, i);
+      }, i, renderContext.captureMode);
 
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      const slideHandles = await page.$$(".slide");
-      const currentSlide = slideHandles[i];
+      const captureHandle = renderContext.captureMode === "frame"
+        ? await page.$("[data-render-capture-root='true']")
+        : (await page.$$(".slide"))[i];
 
-      if (!currentSlide) {
+      if (!captureHandle) {
         throw new Error(`Slide ${i + 1} could not be rendered`);
       }
 
       const filePath = path.join(requestDir, `slide-${i + 1}.png`);
 
-      await currentSlide.screenshot({
+      await captureHandle.screenshot({
         path: filePath,
         omitBackground: true
       });
