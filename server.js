@@ -15,16 +15,137 @@ const cors = require("cors");
 const app = express();
 const previewSessions = new Map();
 const previewJobs = new Map();
+const sourceSessions = new Map();
 const PREVIEW_TTL_MS = 15 * 60 * 1000;
 const EXPORT_WIDTH = 1080;
 const EXPORT_HEIGHT = 1350;
 
-app.use(express.json({ limit: "25mb" }));
+app.use(express.json({ limit: "100mb" }));
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
 function cleanHtml(html) {
   return html.replace(/<!--[\s\S]*?-->/g, "");
+}
+
+const EMOJI_FONT_HREF = "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap";
+const EMOJI_SUPPORT_MARKUP = [
+  '<meta charset="utf-8">',
+  `<link rel="stylesheet" href="${EMOJI_FONT_HREF}">`,
+  "<style>",
+  ".codex-emoji-glyph {",
+  '  font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;',
+  "  font-style: normal !important;",
+  "  font-variant-emoji: emoji;",
+  "}",
+  "</style>",
+  "<script>",
+  "(function () {",
+  "  if (window.__codexEmojiSupportLoaded) {",
+  "    return;",
+  "  }",
+  "  window.__codexEmojiSupportLoaded = true;",
+  '  const emojiPattern = /(?:\\p{Regional_Indicator}{2}|[#*0-9]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\uFE0E)?(?:\\u200D\\p{Extended_Pictographic}(?:\\uFE0F|\\uFE0E)?)*)/gu;',
+  "  function shouldSkip(node) {",
+  "    const parent = node.parentElement;",
+  "    if (!parent) {",
+  "      return true;",
+  "    }",
+  "    const tagName = parent.tagName;",
+  '    return tagName === "SCRIPT" || tagName === "STYLE" || tagName === "TEXTAREA" || tagName === "TITLE";',
+  "  }",
+  "  function containsEmoji(text) {",
+  "    emojiPattern.lastIndex = 0;",
+  "    return emojiPattern.test(text);",
+  "  }",
+  "  function wrapEmojiText(root) {",
+  "    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {",
+  "      acceptNode(node) {",
+  "        if (!node.nodeValue || !containsEmoji(node.nodeValue) || shouldSkip(node)) {",
+  "          return NodeFilter.FILTER_REJECT;",
+  "        }",
+  "        return NodeFilter.FILTER_ACCEPT;",
+  "      }",
+  "    });",
+  "    const textNodes = [];",
+  "    while (walker.nextNode()) {",
+  "      textNodes.push(walker.currentNode);",
+  "    }",
+  "    for (const node of textNodes) {",
+  "      const text = node.nodeValue;",
+  "      if (!text) {",
+  "        continue;",
+  "      }",
+  "      const fragment = document.createDocumentFragment();",
+  "      let lastIndex = 0;",
+  "      emojiPattern.lastIndex = 0;",
+  "      let match;",
+  "      while ((match = emojiPattern.exec(text))) {",
+  "        const [value] = match;",
+  "        const index = match.index;",
+  "        if (index > lastIndex) {",
+  "          fragment.appendChild(document.createTextNode(text.slice(lastIndex, index)));",
+  "        }",
+  '        const span = document.createElement("span");',
+  '        span.className = "codex-emoji-glyph";',
+  "        span.textContent = value;",
+  "        fragment.appendChild(span);",
+  "        lastIndex = index + value.length;",
+  "      }",
+  "      if (lastIndex < text.length) {",
+  "        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));",
+  "      }",
+  "      node.parentNode.replaceChild(fragment, node);",
+  "    }",
+  "  }",
+  "  function boot() {",
+  "    wrapEmojiText(document.body || document.documentElement);",
+  "  }",
+  '  if (document.readyState === "loading") {',
+  '    document.addEventListener("DOMContentLoaded", boot, { once: true });',
+  "  } else {",
+  "    boot();",
+  "  }",
+  "})();",
+  "</script>"
+].join("");
+
+function injectHeadMarkup(html, markup) {
+  if (!markup) {
+    return html;
+  }
+
+  if (/<head\b[^>]*>/i.test(html)) {
+    return html.replace(/<head\b[^>]*>/i, match => `${match}${markup}`);
+  }
+
+  return `<head>${markup}</head>${html}`;
+}
+
+function prepareHtml(html, baseHref) {
+  let headMarkup = EMOJI_SUPPORT_MARKUP;
+
+  if (baseHref) {
+    const safeHref = String(baseHref).replace(/"/g, "&quot;");
+    const baseTag = `<base href="${safeHref}">`;
+    if (/<base\b[^>]*>/i.test(html)) {
+      html = html.replace(/<base\b[^>]*>/i, baseTag);
+    } else {
+      headMarkup = `${baseTag}${headMarkup}`;
+    }
+  }
+
+  return injectHeadMarkup(html, headMarkup);
+}
+
+function normalizeRelativeAssetPath(relativePath) {
+  const normalized = path.posix.normalize(String(relativePath || "").replace(/\\/g, "/"));
+
+  if (!normalized || normalized === "." || normalized.startsWith("../") || normalized.includes("/../") || path.posix.isAbsolute(normalized)) {
+    throw new Error(`Invalid asset path: ${relativePath}`);
+  }
+
+  return normalized;
 }
 
 async function removeDirSafe(dirPath) {
@@ -90,6 +211,37 @@ function scheduleJobCleanup(jobId) {
   }, PREVIEW_TTL_MS);
 }
 
+function cleanupSourceSession(sourceSessionId) {
+  const session = sourceSessions.get(sourceSessionId);
+
+  if (!session) {
+    return;
+  }
+
+  if (session.cleanupTimer) {
+    clearTimeout(session.cleanupTimer);
+  }
+
+  sourceSessions.delete(sourceSessionId);
+  return removeDirSafe(session.assetDir);
+}
+
+function scheduleSourceCleanup(sourceSessionId) {
+  const session = sourceSessions.get(sourceSessionId);
+
+  if (!session) {
+    return;
+  }
+
+  if (session.cleanupTimer) {
+    clearTimeout(session.cleanupTimer);
+  }
+
+  session.cleanupTimer = setTimeout(async () => {
+    await cleanupSourceSession(sourceSessionId);
+  }, PREVIEW_TTL_MS);
+}
+
 function normalizeScale(scale) {
   return Number(scale) === 2 ? 2 : 1;
 }
@@ -126,6 +278,7 @@ async function renderSlides(html, options = {}, onProgress) {
   let browser;
   let requestDir;
   const exportScale = normalizeScale(options.scale);
+  const resolvedHtml = prepareHtml(cleanHtml(html), options.assetBaseUrl);
 
   try {
     requestDir = await fsp.mkdtemp(path.join(os.tmpdir(), "html-to-png-"));
@@ -148,7 +301,7 @@ async function renderSlides(html, options = {}, onProgress) {
       deviceScaleFactor: exportScale
     });
 
-    await page.setContent(cleanHtml(html), { waitUntil: "networkidle0" });
+    await page.setContent(resolvedHtml, { waitUntil: "networkidle0" });
     await page.addStyleTag({ content: buildRenderStyles() });
 
     await page.evaluate(() => {
@@ -359,8 +512,79 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.post("/source/register", async (req, res) => {
+  let assetDir;
+
+  try {
+    const assets = Array.isArray(req.body.assets) ? req.body.assets : [];
+
+    if (!assets.length) {
+      return res.status(400).json({ error: "No asset files provided" });
+    }
+
+    assetDir = await fsp.mkdtemp(path.join(os.tmpdir(), "html-to-png-assets-"));
+
+    for (const asset of assets) {
+      const relativePath = normalizeRelativeAssetPath(asset.relativePath || asset.name);
+      const targetPath = path.join(assetDir, relativePath);
+      const targetDir = path.dirname(targetPath);
+      const base64 = String(asset.base64 || "");
+
+      if (!base64) {
+        throw new Error(`Asset ${relativePath} is empty`);
+      }
+
+      await fsp.mkdir(targetDir, { recursive: true });
+      await fsp.writeFile(targetPath, Buffer.from(base64, "base64"));
+    }
+
+    const sourceSessionId = crypto.randomUUID();
+    sourceSessions.set(sourceSessionId, {
+      assetDir,
+      cleanupTimer: null
+    });
+    scheduleSourceCleanup(sourceSessionId);
+
+    res.json({
+      sourceSessionId,
+      assetCount: assets.length
+    });
+  } catch (error) {
+    await removeDirSafe(assetDir);
+    res.status(400).json({ error: error.message || "Asset registration failed" });
+  }
+});
+
+app.get("/source-assets/:sourceSessionId/*", async (req, res) => {
+  const sourceSessionId = req.params.sourceSessionId;
+  const session = sourceSessions.get(sourceSessionId);
+
+  if (!session) {
+    return res.status(404).send("Asset session expired");
+  }
+
+  try {
+    const relativePath = normalizeRelativeAssetPath(req.params[0]);
+    const resolvedPath = path.resolve(session.assetDir, relativePath);
+    const rootPath = path.resolve(session.assetDir);
+
+    if (!resolvedPath.startsWith(rootPath + path.sep) && resolvedPath !== rootPath) {
+      return res.status(400).send("Invalid asset path");
+    }
+
+    scheduleSourceCleanup(sourceSessionId);
+    res.sendFile(resolvedPath, error => {
+      if (error && !res.headersSent) {
+        res.status(error.statusCode || 404).send("Asset not found");
+      }
+    });
+  } catch (error) {
+    res.status(400).send(error.message || "Invalid asset path");
+  }
+});
+
 app.post("/preview/start", async (req, res) => {
-  const { html, scale } = req.body;
+  const { html, scale, assetBaseUrl } = req.body;
 
   if (!html) {
     return res.status(400).json({ error: "No HTML provided" });
@@ -385,7 +609,7 @@ app.post("/preview/start", async (req, res) => {
     try {
       job.status = "running";
 
-      const rendered = await renderSlides(html, { scale }, async update => {
+      const rendered = await renderSlides(html, { scale, assetBaseUrl }, async update => {
         if (typeof update.total === "number") {
           job.total = update.total;
         }
@@ -470,13 +694,13 @@ app.post("/export", async (req, res) => {
   try {
     console.log("Export request received");
 
-    const { html, scale } = req.body;
+    const { html, scale, assetBaseUrl } = req.body;
 
     if (!html) {
       return res.status(400).send("No HTML provided");
     }
 
-    const rendered = await renderSlides(html, { scale });
+    const rendered = await renderSlides(html, { scale, assetBaseUrl });
     requestDir = rendered.requestDir;
 
     const zipPath = path.join(requestDir, "slides.zip");

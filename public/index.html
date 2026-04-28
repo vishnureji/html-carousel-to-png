@@ -687,6 +687,7 @@ iframe,
       </div>
       <div class="topbarActions">
         <div id="headerFileChip" class="chip"><strong>File</strong> Untitled</div>
+        <div id="headerAssetChip" class="chip"><strong>Assets</strong> None</div>
         <div id="headerSlideChip" class="chip"><strong>Slides</strong> 0 detected</div>
         <div id="headerModeChip" class="chip"><strong>View</strong> Live preview</div>
       </div>
@@ -708,6 +709,7 @@ iframe,
               </div>
               <div class="sourceMeta">
                 <div id="sourceFileChip" class="chip"><strong>File</strong> Untitled</div>
+                <div id="sourceAssetChip" class="chip"><strong>Assets</strong> None</div>
                 <div id="sourceRenderChip" class="chip"><strong>Status</strong> Waiting</div>
               </div>
             </div>
@@ -715,6 +717,8 @@ iframe,
             <div class="sourceActions">
               <button id="filePickerBtn" type="button" class="btn">Choose HTML File</button>
               <input id="fileInput" type="file" accept=".html,text/html" hidden>
+              <button id="assetPickerBtn" type="button" class="btn">Choose Assets Folder</button>
+              <input id="assetInput" type="file" multiple webkitdirectory hidden>
               <button id="livePreviewBtn" type="button" class="btn">Refresh Preview</button>
               <button id="renderBtn" type="button" class="btn btnPrimary">Render Slides</button>
               <button id="downloadBtn" type="button" class="btn" disabled>Download ZIP</button>
@@ -830,7 +834,9 @@ iframe,
   const prevSlideBtn = document.getElementById("prevSlideBtn");
   const nextSlideBtn = document.getElementById("nextSlideBtn");
   const filePickerBtn = document.getElementById("filePickerBtn");
+  const assetPickerBtn = document.getElementById("assetPickerBtn");
   const fileInput = document.getElementById("fileInput");
+  const assetInput = document.getElementById("assetInput");
   const exportScale = document.getElementById("exportScale");
   const dropZone = document.getElementById("dropZone");
   const textarea = document.getElementById("htmlInput");
@@ -850,9 +856,11 @@ iframe,
   const editorMeta = document.getElementById("editorMeta");
   const editorSubMeta = document.getElementById("editorSubMeta");
   const headerFileChip = document.getElementById("headerFileChip");
+  const headerAssetChip = document.getElementById("headerAssetChip");
   const headerSlideChip = document.getElementById("headerSlideChip");
   const headerModeChip = document.getElementById("headerModeChip");
   const sourceFileChip = document.getElementById("sourceFileChip");
+  const sourceAssetChip = document.getElementById("sourceAssetChip");
   const sourceRenderChip = document.getElementById("sourceRenderChip");
   const activeSlideMeta = document.getElementById("activeSlideMeta");
   const outputSummary = document.getElementById("outputSummary");
@@ -868,10 +876,125 @@ iframe,
   let currentFileName = "Untitled";
   let activeView = "live";
   let lastFindIndex = -1;
+  let sourceAssetSessionId = "";
+  let assetBaseUrl = "";
+  let assetCount = 0;
+  const EMOJI_FONT_HREF = "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap";
+  const EMOJI_SUPPORT_MARKUP = [
+    '<meta charset="utf-8">',
+    `<link rel="stylesheet" href="${EMOJI_FONT_HREF}">`,
+    "<style>",
+    ".codex-emoji-glyph {",
+    '  font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;',
+    "  font-style: normal !important;",
+    "  font-variant-emoji: emoji;",
+    "}",
+    "</style>",
+    "<script>",
+    "(function () {",
+    "  if (window.__codexEmojiSupportLoaded) {",
+    "    return;",
+    "  }",
+    "  window.__codexEmojiSupportLoaded = true;",
+    '  const emojiPattern = /(?:\\p{Regional_Indicator}{2}|[#*0-9]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\uFE0E)?(?:\\u200D\\p{Extended_Pictographic}(?:\\uFE0F|\\uFE0E)?)*)/gu;',
+    "  function shouldSkip(node) {",
+    "    const parent = node.parentElement;",
+    "    if (!parent) {",
+    "      return true;",
+    "    }",
+    "    const tagName = parent.tagName;",
+    '    return tagName === "SCRIPT" || tagName === "STYLE" || tagName === "TEXTAREA" || tagName === "TITLE";',
+    "  }",
+    "  function containsEmoji(text) {",
+    "    emojiPattern.lastIndex = 0;",
+    "    return emojiPattern.test(text);",
+    "  }",
+    "  function wrapEmojiText(root) {",
+    "    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {",
+    "      acceptNode(node) {",
+    "        if (!node.nodeValue || !containsEmoji(node.nodeValue) || shouldSkip(node)) {",
+    "          return NodeFilter.FILTER_REJECT;",
+    "        }",
+    "        return NodeFilter.FILTER_ACCEPT;",
+    "      }",
+    "    });",
+    "    const textNodes = [];",
+    "    while (walker.nextNode()) {",
+    "      textNodes.push(walker.currentNode);",
+    "    }",
+    "    for (const node of textNodes) {",
+    "      const text = node.nodeValue;",
+    "      if (!text) {",
+    "        continue;",
+    "      }",
+    "      const fragment = document.createDocumentFragment();",
+    "      let lastIndex = 0;",
+    "      emojiPattern.lastIndex = 0;",
+    "      let match;",
+    "      while ((match = emojiPattern.exec(text))) {",
+    "        const [value] = match;",
+    "        const index = match.index;",
+    "        if (index > lastIndex) {",
+    "          fragment.appendChild(document.createTextNode(text.slice(lastIndex, index)));",
+    "        }",
+    '        const span = document.createElement("span");',
+    '        span.className = "codex-emoji-glyph";',
+    "        span.textContent = value;",
+    "        fragment.appendChild(span);",
+    "        lastIndex = index + value.length;",
+    "      }",
+    "      if (lastIndex < text.length) {",
+    "        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));",
+    "      }",
+    "      node.parentNode.replaceChild(fragment, node);",
+    "    }",
+    "  }",
+    "  function boot() {",
+    "    wrapEmojiText(document.body || document.documentElement);",
+    "  }",
+    '  if (document.readyState === "loading") {',
+    '    document.addEventListener("DOMContentLoaded", boot, { once: true });',
+    "  } else {",
+    "    boot();",
+    "  }",
+    "})();",
+    "<\\/script>"
+  ].join("");
 
   function getExportScale() {
     const scale = Number(exportScale.value);
     return scale === 2 ? 2 : 1;
+  }
+
+  function injectHeadMarkup(html, markup) {
+    if (!markup) {
+      return html;
+    }
+
+    if (/<head\b[^>]*>/i.test(html)) {
+      return html.replace(/<head\b[^>]*>/i, function (match) {
+        return `${match}${markup}`;
+      });
+    }
+
+    return `<head>${markup}</head>${html}`;
+  }
+
+  function prepareHtml(html, baseHref) {
+    let headMarkup = EMOJI_SUPPORT_MARKUP;
+
+    if (baseHref) {
+      const safeHref = String(baseHref).replace(/"/g, "&quot;");
+      const baseTag = `<base href="${safeHref}">`;
+
+      if (/<base\b[^>]*>/i.test(html)) {
+        html = html.replace(/<base\b[^>]*>/i, baseTag);
+      } else {
+        headMarkup = `${baseTag}${headMarkup}`;
+      }
+    }
+
+    return injectHeadMarkup(html, headMarkup);
   }
 
   function cleanHTML(html) {
@@ -913,10 +1036,12 @@ iframe,
     const slideCount = countSlides(textarea.value);
     headerFileChip.innerHTML = `<strong>File</strong> ${currentFileName}`;
     sourceFileChip.innerHTML = `<strong>File</strong> ${currentFileName}`;
+    headerAssetChip.innerHTML = `<strong>Assets</strong> ${assetCount ? `${assetCount} loaded` : "None"}`;
+    sourceAssetChip.innerHTML = `<strong>Assets</strong> ${assetCount ? `${assetCount} loaded` : "None"}`;
     headerSlideChip.innerHTML = `<strong>Slides</strong> ${slideCount} detected`;
     editorMeta.textContent = slideCount ? `${slideCount} slide${slideCount === 1 ? "" : "s"} detected` : "No slides detected";
     editorSubMeta.innerHTML = slideCount
-      ? "Live preview is ready. Render when you want social-ready PNG output."
+      ? `${assetCount ? "Asset folder linked. " : ""}Live preview is ready. Render when you want social-ready PNG output.`
       : 'Add one or more <code>.slide</code> elements from your carousel HTML.';
   }
 
@@ -924,8 +1049,66 @@ iframe,
     const iframe = document.createElement("iframe");
     iframe.id = "frame";
     iframe.title = "Live HTML preview";
-    iframe.srcdoc = cleanHTML(textarea.value);
+    iframe.srcdoc = prepareHtml(cleanHTML(textarea.value), assetBaseUrl);
     return iframe;
+  }
+
+  function fileToBase64(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+
+      reader.onload = function () {
+        const result = String(reader.result || "");
+        const commaIndex = result.indexOf(",");
+        resolve(commaIndex === -1 ? result : result.slice(commaIndex + 1));
+      };
+
+      reader.onerror = function () {
+        reject(reader.error || new Error("Could not read file"));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function registerAssetFiles(fileList) {
+    const files = Array.from(fileList || []).filter(function (file) {
+      return file && file.size >= 0;
+    });
+
+    if (!files.length) {
+      sourceAssetSessionId = "";
+      assetBaseUrl = "";
+      assetCount = 0;
+      updateSourceMeta();
+      return;
+    }
+
+    const assets = await Promise.all(files.map(async function (file) {
+      return {
+        relativePath: file.webkitRelativePath || file.name,
+        base64: await fileToBase64(file)
+      };
+    }));
+
+    const response = await fetch("/source/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ assets })
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Asset upload failed");
+    }
+
+    sourceAssetSessionId = data.sourceSessionId || "";
+    assetBaseUrl = sourceAssetSessionId ? `${window.location.origin}/source-assets/${sourceAssetSessionId}/` : "";
+    assetCount = Number(data.assetCount) || files.length;
+    updateSourceMeta();
+    queuePreviewRefresh();
   }
 
   function notifyEditorChanged(statusText) {
@@ -1173,7 +1356,9 @@ iframe,
     updateSourceMeta();
     statusValue.textContent = `Loaded ${file.name}`;
     sourceRenderChip.innerHTML = "<strong>Status</strong> Source ready";
-    fileMeta.textContent = "File loaded and live preview updated";
+    fileMeta.textContent = assetCount
+      ? `File loaded with ${assetCount} supporting asset${assetCount === 1 ? "" : "s"}`
+      : "File loaded and live preview updated";
     setActiveView("live");
   }
 
@@ -1241,6 +1426,9 @@ iframe,
     paintViewport();
     statusValue.textContent = "Preview refreshed";
     sourceRenderChip.innerHTML = "<strong>Status</strong> Source ready";
+    fileMeta.textContent = assetCount
+      ? `Preview refreshed with ${assetCount} supporting asset${assetCount === 1 ? "" : "s"}`
+      : "Live preview refreshed";
   });
 
   renderBtn.addEventListener("click", async function () {
@@ -1275,7 +1463,8 @@ iframe,
         },
         body: JSON.stringify({
           html,
-          scale: getExportScale()
+          scale: getExportScale(),
+          assetBaseUrl
         })
       });
       const data = await res.json();
@@ -1285,7 +1474,9 @@ iframe,
       }
 
       currentJobId = data.jobId;
-      fileMeta.textContent = "Renderer connected";
+      fileMeta.textContent = assetCount
+        ? `Renderer connected with ${assetCount} supporting asset${assetCount === 1 ? "" : "s"}`
+        : "Renderer connected";
       await pollPreviewStatus(currentJobId);
     } catch (error) {
       handleRenderError(error);
@@ -1333,6 +1524,10 @@ iframe,
     fileInput.click();
   });
 
+  assetPickerBtn.addEventListener("click", function () {
+    assetInput.click();
+  });
+
   fileInput.addEventListener("change", async function () {
     try {
       await loadHtmlFile(fileInput.files[0]);
@@ -1341,6 +1536,26 @@ iframe,
       alert("Could not read that file.");
     } finally {
       fileInput.value = "";
+    }
+  });
+
+  assetInput.addEventListener("change", async function () {
+    try {
+      await registerAssetFiles(assetInput.files);
+      if (textarea.value.trim()) {
+        notifyEditorChanged("Assets updated");
+      }
+      statusValue.textContent = assetCount
+        ? `Loaded ${assetCount} asset${assetCount === 1 ? "" : "s"}`
+        : "Assets cleared";
+      fileMeta.textContent = assetCount
+        ? "Icons, vectors, and other relative assets are linked for preview and export"
+        : "No supporting assets linked";
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Could not upload those assets.");
+    } finally {
+      assetInput.value = "";
     }
   });
 
@@ -1396,7 +1611,32 @@ iframe,
     dropZone.classList.remove("isActive");
 
     try {
-      await loadHtmlFile(event.dataTransfer.files[0]);
+      const files = Array.from(event.dataTransfer.files || []);
+      const htmlFile = files.find(function (file) {
+        const fileName = file.name.toLowerCase();
+        return file.type === "text/html" || fileName.endsWith(".html") || fileName.endsWith(".htm");
+      });
+      const assetFiles = files.filter(function (file) {
+        return file !== htmlFile;
+      });
+
+      if (assetFiles.length) {
+        await registerAssetFiles(assetFiles);
+        if (!htmlFile && textarea.value.trim()) {
+          notifyEditorChanged("Assets updated");
+        }
+      }
+
+      if (htmlFile) {
+        await loadHtmlFile(htmlFile);
+      } else if (!assetFiles.length) {
+        await loadHtmlFile(files[0]);
+      } else {
+        statusValue.textContent = assetCount
+          ? `Loaded ${assetCount} asset${assetCount === 1 ? "" : "s"}`
+          : "Assets updated";
+        fileMeta.textContent = "Supporting assets are ready for the current HTML source";
+      }
     } catch (error) {
       console.error(error);
       alert("Could not read that file.");
