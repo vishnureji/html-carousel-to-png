@@ -94,6 +94,30 @@ function normalizeScale(scale) {
   return Number(scale) === 2 ? 2 : 1;
 }
 
+function buildRenderStyles() {
+  return `
+    html, body {
+      margin: 0 !important;
+      background: transparent !important;
+      width: ${EXPORT_WIDTH}px !important;
+      min-height: ${EXPORT_HEIGHT}px !important;
+      overflow: hidden !important;
+    }
+
+    body {
+      position: relative !important;
+    }
+
+    .slide[data-render-slide="true"] {
+      box-sizing: border-box !important;
+      width: ${EXPORT_WIDTH}px !important;
+      height: ${EXPORT_HEIGHT}px !important;
+      margin: 0 !important;
+      isolation: isolate !important;
+    }
+  `;
+}
+
 async function renderSlides(html, options = {}, onProgress) {
   let browser;
   let requestDir;
@@ -120,45 +144,42 @@ async function renderSlides(html, options = {}, onProgress) {
       deviceScaleFactor: exportScale
     });
 
-    await page.setContent(
-      `<!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          html, body {
-            margin: 0;
-            background: transparent;
-            width: ${EXPORT_WIDTH}px;
-            min-height: ${EXPORT_HEIGHT}px;
-            overflow: hidden;
-          }
-
-          body {
-            display: block;
-          }
-        </style>
-      </head>
-      <body>${cleanHtml(html)}</body>
-      </html>`,
-      { waitUntil: "networkidle0" }
-    );
+    await page.setContent(cleanHtml(html), { waitUntil: "networkidle0" });
+    await page.addStyleTag({ content: buildRenderStyles() });
 
     await page.evaluate(() => {
       document.documentElement.style.background = "transparent";
-      document.body.style.background = "transparent";
+      if (document.body) {
+        document.body.style.background = "transparent";
+      }
     });
 
     await page.evaluate(async () => {
-      await document.fonts.ready;
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+
+      const imagePromises = Array.from(document.images || [])
+        .filter(image => !image.complete)
+        .map(image => new Promise(resolve => {
+          image.addEventListener("load", resolve, { once: true });
+          image.addEventListener("error", resolve, { once: true });
+        }));
+
+      if (imagePromises.length) {
+        await Promise.all(imagePromises);
+      }
+
       await new Promise(resolve => setTimeout(resolve, 300));
     });
 
     await page.evaluate((width, height) => {
       document.querySelectorAll(".slide").forEach(el => {
+        const display = window.getComputedStyle(el).display;
+        el.dataset.renderDisplay = display && display !== "none" ? display : "block";
+        el.dataset.renderSlide = "true";
         el.style.width = `${width}px`;
         el.style.height = `${height}px`;
-        el.style.display = "flex";
         el.style.visibility = "visible";
         el.style.opacity = "1";
       });
@@ -187,7 +208,7 @@ async function renderSlides(html, options = {}, onProgress) {
       await page.evaluate(index => {
         document.querySelectorAll(".slide").forEach((el, slideIndex) => {
           const active = slideIndex === index;
-          el.style.display = active ? "flex" : "none";
+          el.style.display = active ? (el.dataset.renderDisplay || "block") : "none";
           el.style.visibility = active ? "visible" : "hidden";
           el.style.opacity = active ? "1" : "0";
         });
